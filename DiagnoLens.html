@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DiagnoLens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { height: 100%; }
+  html { overscroll-behavior: none; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #1C1C1E;
+    color: #F2F2F7;
+    -webkit-font-smoothing: antialiased;
+    font-optical-sizing: auto;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  #root {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input:focus { border-color: #00C9A7 !important; outline: none; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #3A3A3E; border-radius: 3px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .screen-enter {
+    animation: fadeUp 350ms cubic-bezier(0.16,1,0.3,1) forwards;
+  }
+
+  /* Tweaks panel */
+  #tweaks-panel {
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    background: #252528; border: 1px solid #3A3A3E;
+    border-radius: 14px; padding: 18px 20px; width: 230px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    font-family: 'DM Sans', sans-serif; color: #F2F2F7;
+    display: none;
+  }
+  #tweaks-panel.visible { display: block; }
+  #tweaks-panel h3 { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #636369; margin-bottom: 14px; }
+  .tweak-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .tweak-label { font-size: 12px; color: #A0A0AB; }
+  .tweak-toggle {
+    width: 36px; height: 20px; border-radius: 100px; cursor: pointer;
+    background: #3A3A3E; border: none; position: relative; transition: background 200ms; padding: 0;
+  }
+  .tweak-toggle.on { background: #00C9A7; }
+  .tweak-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%; background: white;
+    transition: transform 200ms;
+  }
+  .tweak-toggle.on::after { transform: translateX(16px); }
+  .tweak-select {
+    background: #2E2E32; border: 1px solid #3A3A3E; border-radius: 6px;
+    color: #F2F2F7; font-family: 'DM Sans', sans-serif; font-size: 12px;
+    padding: 4px 8px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// --vh tracks the actual visible viewport height.
+// 100vh on iOS Safari includes the address bar, causing a tiny overflow scroll.
+// Using calc(var(--vh) * 100) instead of 100vh fixes this.
+(function () {
+  function setVH() {
+    document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+  }
+  window.addEventListener('resize', setVH, { passive: true });
+  window.addEventListener('orientationchange', setVH, { passive: true });
+  setVH();
+})();
+</script>
+
+<div id="tweaks-panel">
+  <h3>Tweaks</h3>
+  <div class="tweak-row">
+    <span class="tweak-label">Show AI insights</span>
+    <button class="tweak-toggle on" id="tweak-ai" onclick="toggleTweak('ai', this)"></button>
+  </div>
+  <div class="tweak-row">
+    <span class="tweak-label">Skip onboarding</span>
+    <button class="tweak-toggle" id="tweak-skip" onclick="toggleTweak('skip', this)"></button>
+  </div>
+  <div class="tweak-row">
+    <span class="tweak-label">Start screen</span>
+    <select class="tweak-select" id="tweak-start" onchange="applyStartTweak(this.value)">
+      <option value="landing">Landing</option>
+      <option value="upload">Upload</option>
+      <option value="dashboard">Dashboard</option>
+    </select>
+  </div>
+  <div class="tweak-row">
+    <span class="tweak-label">Accent color</span>
+    <select class="tweak-select" id="tweak-accent" onchange="applyAccentTweak(this.value)">
+      <option value="#00C9A7">Teal (default)</option>
+      <option value="#60A5FA">Blue</option>
+      <option value="#A78BFA">Violet</option>
+    </select>
+  </div>
+</div>
+
+<script>
+const TWEAKS = {"showAI": true, "skipOnboarding": false, "startScreen": "landing", "accent": "#00C9A7"};
+
+function toggleTweak(key, btn) {
+  if (key === 'ai') {
+    TWEAKS.showAI = !TWEAKS.showAI;
+    btn.classList.toggle('on', TWEAKS.showAI);
+    window.__diagnoShowAI = TWEAKS.showAI;
+    window.dispatchEvent(new Event('tweaksChanged'));
+  }
+  if (key === 'skip') {
+    TWEAKS.skipOnboarding = !TWEAKS.skipOnboarding;
+    btn.classList.toggle('on', TWEAKS.skipOnboarding);
+  }
+  window.parent.postMessage({ type: '__edit_mode_set_keys', edits: TWEAKS }, '*');
+}
+function applyStartTweak(v) {
+  TWEAKS.startScreen = v;
+  window.parent.postMessage({ type: '__edit_mode_set_keys', edits: TWEAKS }, '*');
+}
+function applyAccentTweak(v) {
+  TWEAKS.accent = v;
+  document.documentElement.style.setProperty('--dl-accent', v);
+  window.parent.postMessage({ type: '__edit_mode_set_keys', edits: TWEAKS }, '*');
+}
+
+window.addEventListener('message', e => {
+  if (e.data?.type === '__activate_edit_mode') document.getElementById('tweaks-panel').classList.add('visible');
+  if (e.data?.type === '__deactivate_edit_mode') document.getElementById('tweaks-panel').classList.remove('visible');
+});
+window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+window.__diagnoShowAI = TWEAKS.showAI;
+</script>
+
+<script src="dl_config.js"></script>
+<script type="text/babel" src="dl_primitives.jsx"></script>
+<script type="text/babel" src="dl_landing.jsx"></script>
+<script type="text/babel" src="dl_upload.jsx"></script>
+<script type="text/babel" src="dl_shell.jsx"></script>
+<script type="text/babel" src="dl_biomarker_modal.jsx"></script>
+<script type="text/babel" src="dl_dashboard.jsx"></script>
+<script type="text/babel" src="dl_detail.jsx"></script>
+
+<script type="text/babel">
+const STORAGE_KEY = 'diagnolens_v2_state';
+const SS_REPORT_KEY = 'dl_report';
+
+function ssReadReport() {
+  try { return JSON.parse(sessionStorage.getItem(SS_REPORT_KEY) || 'null'); } catch { return null; }
+}
+function ssWriteReport(data) {
+  try { sessionStorage.setItem(SS_REPORT_KEY, JSON.stringify(data)); } catch {}
+}
+
+function App() {
+  const saved = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; } })();
+  const startScreen = TWEAKS.startScreen || 'landing';
+
+  const [screen, setScreen] = React.useState(saved.screen || startScreen);
+  const [appView, setAppView] = React.useState(saved.appView || 'dashboard');
+  const [selectedBiomarker, setSelectedBiomarker] = React.useState(null);
+  const [reportData, setReportData] = React.useState(() => ssReadReport());
+  const [showAI, setShowAI] = React.useState(window.__diagnoShowAI !== false);
+
+  React.useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ screen, appView }));
+  }, [screen, appView]);
+
+  React.useEffect(() => {
+    const handler = () => setShowAI(window.__diagnoShowAI !== false);
+    window.addEventListener('tweaksChanged', handler);
+    return () => window.removeEventListener('tweaksChanged', handler);
+  }, []);
+
+  const goToApp = () => {
+    if (TWEAKS.skipOnboarding) { setScreen('app'); }
+    else { setScreen('onboarding'); }
+  };
+
+  const onOnboardingComplete = (data) => {
+    if (data) {
+      setReportData(data);
+      ssWriteReport(data);
+    }
+    setScreen('app');
+    setAppView('dashboard');
+  };
+
+  const handleNavNavigate = (v) => {
+    if (v === 'upload') { setScreen('onboarding'); return; }
+    setAppView(v);
+    setSelectedBiomarker(null);
+  };
+
+  const handleSelectBiomarker = (b) => {
+    setSelectedBiomarker(b);
+    setAppView('detail');
+  };
+
+  const handleBack = () => {
+    setSelectedBiomarker(null);
+    setAppView('dashboard');
+  };
+
+  const renderAppContent = () => {
+    if (appView === 'detail' && selectedBiomarker) {
+      return React.createElement(DetailView, { biomarker: selectedBiomarker, onBack: handleBack });
+    }
+    if (appView === 'reports') {
+      return React.createElement(ReportsView, { reportData, onSelect: handleSelectBiomarker });
+    }
+    if (appView === 'trends') {
+      return React.createElement(TrendsView, { reportData, onSelect: handleSelectBiomarker });
+    }
+    if (appView === 'ask') {
+      return React.createElement(AskView, { reportData });
+    }
+    return React.createElement(DashboardView, { reportData, onSelectBiomarker: handleSelectBiomarker });
+  };
+
+  if (screen === 'landing') {
+    return React.createElement('div', { className: 'screen-enter' },
+      React.createElement(LandingPage, { onGetStarted: goToApp })
+    );
+  }
+  if (screen === 'onboarding') {
+    return React.createElement('div', { className: 'screen-enter' },
+      React.createElement(OnboardingFlow, { onComplete: onOnboardingComplete })
+    );
+  }
+  return React.createElement('div', { className: 'screen-enter' },
+    React.createElement(AppShell, { currentView: appView, onNavigate: handleNavNavigate },
+      renderAppContent()
+    )
+  );
+}
+
+// ── Reports View ──────────────────────────────────────────────
+
+function ReportsView({ reportData, onSelect }) {
+  const biomarkers = reportData?.biomarkers || [];
+  const abnormalCount = biomarkers.filter(b => b.is_abnormal).length;
+  const overallStatus = abnormalCount > 2 ? 'warning' : abnormalCount > 0 ? 'caution' : 'normal';
+
+  return React.createElement('div', { style: { maxWidth: 600 } },
+    React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 } },
+      React.createElement('h1', { style: { fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' } }, 'My reports'),
+      React.createElement(Button, { variant: 'primary', size: 'sm', onClick: () => {} },
+        React.createElement(Icon, { name: 'upload-cloud', size: 13 }),
+        'Upload new'
+      )
+    ),
+    !reportData
+      ? React.createElement(EmptyState, { message: 'No reports yet. Upload your first blood panel to get started.' })
+      : React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+          React.createElement(Card, {
+            hover: true,
+            style: { padding: '14px 18px', cursor: 'pointer' },
+            onClick: () => biomarkers[0] && onSelect(biomarkers[0]),
+          },
+            React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12 } },
+              React.createElement('div', {
+                style: {
+                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                  background: DL_COLORS.bgRaised, border: `1px solid ${DL_COLORS.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }
+              },
+                React.createElement(Icon, { name: 'file-text', size: 16, style: { color: DL_COLORS.fgMuted } })
+              ),
+              React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+                React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 } },
+                  React.createElement('div', {
+                    style: { fontSize: 13, fontWeight: 500, color: DL_COLORS.fgPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+                  }, reportData.fileName || 'Uploaded report'),
+                  React.createElement('span', {
+                    style: { fontSize: 10, fontWeight: 600, color: DL_COLORS.accent, background: DL_COLORS.accentDim, border: `1px solid ${DL_COLORS.accentBorder}`, borderRadius: 100, padding: '1px 7px', flexShrink: 0 }
+                  }, 'Latest')
+                ),
+                React.createElement('div', { style: { fontSize: 11, color: DL_COLORS.fgMuted } },
+                  `${biomarkers.length} biomarker${biomarkers.length !== 1 ? 's' : ''}  ·  ${abnormalCount} outside range`
+                )
+              ),
+              React.createElement(Badge, { status: overallStatus }),
+              React.createElement(Icon, { name: 'chevron-right', size: 15, style: { color: DL_COLORS.fgMuted } })
+            )
+          )
+        )
+  );
+}
+
+// ── Trends View ───────────────────────────────────────────────
+
+function TrendsView({ reportData, onSelect }) {
+  const biomarkers = reportData?.biomarkers || [];
+
+  return React.createElement('div', { style: { maxWidth: 700 } },
+    React.createElement('h1', { style: { fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 8 } }, 'Trends'),
+    !reportData
+      ? React.createElement(EmptyState, { message: 'Upload a report to see your biomarker trends.' })
+      : React.createElement(React.Fragment, null,
+          React.createElement('div', { style: { fontSize: 13, color: DL_COLORS.fgMuted, marginBottom: 20 } },
+            'Upload multiple reports over time to track how your biomarkers change.'
+          ),
+          React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 } },
+            biomarkers.map(b =>
+              React.createElement(Card, { key: b.name, hover: true, style: { cursor: 'pointer', padding: '16px 18px' }, onClick: () => onSelect(b) },
+                React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 } },
+                  React.createElement('div', { style: { fontSize: 13, fontWeight: 600 } }, b.name),
+                  React.createElement(Badge, { status: b.status })
+                ),
+                React.createElement('div', { style: { display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 } },
+                  React.createElement('span', {
+                    style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 600, color: STATUS_META[b.status].color }
+                  }, b.value),
+                  React.createElement('span', { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: DL_COLORS.fgMuted } }, b.unit)
+                ),
+                b.reference_range && React.createElement('div', { style: { fontSize: 10, color: DL_COLORS.fgMuted } },
+                  `Ref: ${b.reference_range}`
+                )
+              )
+            )
+          )
+        )
+  );
+}
+
+// ── Ask View ──────────────────────────────────────────────────
+
+function AskView({ reportData }) {
+  const [messages, setMessages] = React.useState([
+    { role: 'assistant', text: "Hi — I'm DiagnoLens. Ask me anything about your results, and I'll explain in plain language." }
+  ]);
+  const [input, setInput] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const bottomRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (bottomRef.current) bottomRef.current.scrollTop = bottomRef.current.scrollHeight;
+  }, [messages]);
+
+  // Build context string from live report data
+  const bioCtx = React.useMemo(() => {
+    if (!reportData?.biomarkers?.length) return null;
+    return reportData.biomarkers
+      .map(b => `${b.name}: ${b.value} ${b.unit} (${b.apiStatus || b.status})`)
+      .join(', ');
+  }, [reportData]);
+
+  // Dynamic suggestions from actual abnormal markers
+  const suggestions = React.useMemo(() => {
+    if (!reportData?.biomarkers?.length) {
+      return ['Which results should I discuss with my doctor?', 'What do these numbers mean?'];
+    }
+    const abnormal = reportData.biomarkers.filter(b => b.is_abnormal).slice(0, 2);
+    const base = ['Which results should I discuss with my doctor?'];
+    return [
+      ...abnormal.map(b => `What does my ${b.name} result mean?`),
+      ...base,
+    ].slice(0, 3);
+  }, [reportData]);
+
+  const send = async (text) => {
+    const q = (text || input).trim();
+    if (!q || loading) return;
+    setInput('');
+    setMessages(m => [...m, { role: 'user', text: q }]);
+    setLoading(true);
+    try {
+      const ctx = bioCtx
+        ? `The user has these biomarker results from their uploaded report: ${bioCtx}.`
+        : 'The user has not yet uploaded a report.';
+      const reply = await window.claude.complete({
+        messages: [
+          { role: 'user', content: `You are DiagnoLens, a helpful health analysis assistant. ${ctx} Answer the following question in plain language, clearly and concisely. Always recommend discussing with a physician before making clinical decisions. Question: ${q}` }
+        ]
+      });
+      setMessages(m => [...m, { role: 'assistant', text: reply }]);
+    } catch {
+      setMessages(m => [...m, { role: 'assistant', text: "I'm having a bit of trouble right now — please try again in a moment." }]);
+    }
+    setLoading(false);
+  };
+
+  return React.createElement('div', {
+    style: { maxWidth: 580, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)' }
+  },
+    React.createElement('div', {
+      ref: bottomRef,
+      style: { flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 16 }
+    },
+      messages.map((m, i) =>
+        React.createElement('div', {
+          key: i,
+          style: {
+            alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+            background: m.role === 'user' ? DL_COLORS.accentDim : DL_COLORS.bgSurface,
+            border: `1px solid ${m.role === 'user' ? 'rgba(0,201,167,0.2)' : DL_COLORS.border}`,
+            borderRadius: 12, padding: '10px 14px',
+            maxWidth: '85%', fontSize: 13, lineHeight: 1.65,
+          }
+        }, m.text)
+      ),
+      loading && React.createElement('div', {
+        style: { alignSelf: 'flex-start', background: DL_COLORS.bgSurface, border: `1px solid ${DL_COLORS.border}`, borderRadius: 12, padding: '10px 14px' }
+      },
+        React.createElement('div', { style: { display: 'flex', gap: 4 } },
+          [0, 1, 2].map(i => React.createElement('div', {
+            key: i,
+            style: {
+              width: 6, height: 6, borderRadius: '50%', background: DL_COLORS.fgMuted,
+              animation: `spin 1s ease-in-out ${i * 0.2}s infinite`,
+            }
+          }))
+        )
+      )
+    ),
+
+    messages.length === 1 && React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 } },
+      suggestions.map(s =>
+        React.createElement('button', {
+          key: s, onClick: () => send(s),
+          style: {
+            background: DL_COLORS.bgRaised, border: `1px solid ${DL_COLORS.border}`,
+            borderRadius: 100, padding: '6px 12px', color: DL_COLORS.fgSecondary,
+            fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+            transition: 'all 150ms',
+          },
+          onMouseEnter: e => { e.currentTarget.style.borderColor = DL_COLORS.accentBorder; e.currentTarget.style.color = DL_COLORS.accent; },
+          onMouseLeave: e => { e.currentTarget.style.borderColor = DL_COLORS.border; e.currentTarget.style.color = DL_COLORS.fgSecondary; },
+        }, s)
+      )
+    ),
+
+    React.createElement('div', {
+      style: { display: 'flex', gap: 8, paddingTop: 12, borderTop: `1px solid ${DL_COLORS.border}` }
+    },
+      React.createElement('input', {
+        value: input, onChange: e => setInput(e.target.value),
+        onKeyDown: e => e.key === 'Enter' && !e.shiftKey && send(),
+        placeholder: 'Ask about your results…',
+        style: {
+          flex: 1, background: DL_COLORS.bgRaised, border: `1px solid ${DL_COLORS.border}`,
+          borderRadius: 8, padding: '10px 14px', color: DL_COLORS.fgPrimary,
+          fontFamily: "'DM Sans', sans-serif", fontSize: 13, outline: 'none',
+        }
+      }),
+      React.createElement(Button, { variant: 'primary', onClick: () => send(), disabled: !input.trim() || loading },
+        React.createElement(Icon, { name: 'send', size: 13 })
+      )
+    )
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
