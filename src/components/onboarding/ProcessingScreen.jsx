@@ -3,6 +3,7 @@ import { DL_COLORS } from '../../tokens.js';
 import Icon from '../Icon.jsx';
 import { API_BASE } from '../../config.js';
 import { normaliseBiomarker } from '../../utils.js';
+import { useLang } from '../../i18n/LangContext.jsx';
 
 function classifyError(err, status) {
   if (err?.name === 'AbortError') return 'timeout';
@@ -12,46 +13,26 @@ function classifyError(err, status) {
   return 'server';
 }
 
-const ERR = {
-  timeout: {
-    icon: 'clock', title: 'This is taking longer than usual',
-    body: 'Your report may be complex. Your answers have been saved — just try again and it usually goes through.',
-    retryLabel: 'Try again', retryPhase: 'processing',
-  },
-  network: {
-    icon: 'wifi-off', title: "We couldn't connect",
-    body: "Check your internet connection and try again. Nothing you've entered has been lost.",
-    retryLabel: 'Try again', retryPhase: 'processing',
-  },
-  parse: {
-    icon: 'file-x', title: "We couldn't read this file",
-    body: 'We had trouble pulling results from it. A clear PDF exported directly from your lab usually works best.',
-    retryLabel: 'Upload a different file', retryPhase: 'upload',
-  },
-  size: {
-    icon: 'file-minus', title: 'File is too large',
-    body: 'Our limit is 20 MB. Try a compressed PDF or a lower-resolution image and upload again.',
-    retryLabel: 'Upload a different file', retryPhase: 'upload',
-  },
-  server: {
-    icon: 'alert-triangle', title: 'Something went wrong on our end',
-    body: "It's not your file — our servers hit an unexpected issue. Please try again in a moment.",
-    retryLabel: 'Try again', retryPhase: 'processing',
-  },
+const ERROR_META = {
+  timeout: { icon: 'clock',           retryPhase: 'processing' },
+  network: { icon: 'wifi-off',        retryPhase: 'processing' },
+  parse:   { icon: 'file-x',          retryPhase: 'upload'     },
+  size:    { icon: 'file-minus',      retryPhase: 'upload'     },
+  server:  { icon: 'alert-triangle',  retryPhase: 'processing' },
 };
 
-const STEPS_DATA = [
-  { icon: 'scan-text',     label: 'Reading your report',      detail: 'Extracting text and structure…' },
-  { icon: 'flask-conical', label: 'Understanding biomarkers', detail: 'Matching values to clinical references…' },
-  { icon: 'sparkles',      label: 'Personalizing insights',   detail: 'Applying your health context…' },
-];
+const STEP_ICONS = ['scan-text', 'flask-conical', 'sparkles'];
 
 export default function ProcessingScreen({ file, answers, onComplete, onRetry }) {
+  const { t } = useLang();
+
   const [activeStep, setActiveStep]    = useState(0);
   const [completedSteps, setCompleted] = useState([]);
   const [progress, setProgress]        = useState(0);
   const [done, setDone]                = useState(false);
-  const [error, setError]              = useState(null);
+  const [errorType, setErrorType]      = useState(null);
+
+  const processingSteps = t('processing.steps');
 
   useEffect(() => {
     const t1 = setTimeout(() => { setCompleted(s => [...s, 0]); setActiveStep(1); }, 2200);
@@ -60,7 +41,7 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
   }, []);
 
   useEffect(() => {
-    if (done || error) return;
+    if (done || errorType) return;
     const id = setInterval(() => {
       setProgress(p => {
         if (p >= 90) return p;
@@ -69,7 +50,7 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
       });
     }, 80);
     return () => clearInterval(id);
-  }, [done, error]);
+  }, [done, errorType]);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,10 +81,7 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
         const data = await res.json();
         if (cancelled) return;
 
-        if (data.status === 'error') {
-          setError(ERR.parse);
-          return;
-        }
+        if (data.status === 'error') { setErrorType('parse'); return; }
 
         const reportData = {
           ...data,
@@ -118,8 +96,7 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
       } catch (err) {
         clearTimeout(timeoutId);
         if (cancelled) return;
-        const type = classifyError(err, status);
-        setError(ERR[type] || ERR.server);
+        setErrorType(classifyError(err, status));
       }
     }
 
@@ -128,13 +105,18 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
   }, []);
 
   // ── Error screen ───────────────────────────────────────────────
-  if (error) {
+  if (errorType) {
+    const meta       = ERROR_META[errorType] || ERROR_META.server;
+    const errTitle   = t(`processing.errors.${errorType}.title`);
+    const errBody    = t(`processing.errors.${errorType}.body`);
+    const retryLabel = t(`processing.errors.${errorType}.retryLabel`);
+
     return (
       <div style={{
         minHeight: 'calc(var(--vh, 1vh) * 100)', background: DL_COLORS.bgBase,
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', padding: '32px 20px',
-        fontFamily: "'DM Sans', sans-serif", color: DL_COLORS.fgPrimary,
+        color: DL_COLORS.fgPrimary,
       }}>
         <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
           <div style={{
@@ -142,28 +124,28 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
             background: DL_COLORS.warningBg, border: `1px solid ${DL_COLORS.warning}30`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Icon name={error.icon} size={30} style={{ color: DL_COLORS.warning }} />
+            <Icon name={meta.icon} size={30} style={{ color: DL_COLORS.warning }} />
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 10 }}>{error.title}</h2>
-          <p style={{ fontSize: 14, color: DL_COLORS.fgMuted, lineHeight: 1.65, maxWidth: 320, margin: '0 auto 28px' }}>{error.body}</p>
+          <h2 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 10 }}>{errTitle}</h2>
+          <p style={{ fontSize: 14, color: DL_COLORS.fgMuted, lineHeight: 1.65, maxWidth: 320, margin: '0 auto 28px' }}>{errBody}</p>
           <button
-            onClick={() => onRetry(error.retryPhase)}
+            onClick={() => onRetry(meta.retryPhase)}
             style={{
               width: '100%', background: DL_COLORS.accent, color: '#0a1a16',
               border: 'none', borderRadius: 12, padding: '15px 24px',
               fontSize: 15, fontWeight: 600, cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif", marginBottom: 12,
+              marginBottom: 12,
             }}
-          >{error.retryLabel}</button>
-          {error.retryPhase === 'processing' && (
+          >{retryLabel}</button>
+          {meta.retryPhase === 'processing' && (
             <button
               onClick={() => onRetry('upload')}
               style={{
                 width: '100%', background: 'transparent', color: DL_COLORS.fgMuted,
                 border: `1px solid ${DL_COLORS.border}`, borderRadius: 12, padding: '13px 24px',
-                fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 14, cursor: 'pointer',
               }}
-            >Upload a different file instead</button>
+            >{t('processing.errors.uploadDifferent')}</button>
           )}
         </div>
       </div>
@@ -176,10 +158,9 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
       minHeight: 'calc(var(--vh, 1vh) * 100)', background: DL_COLORS.bgBase,
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: '32px 20px',
-      fontFamily: "'DM Sans', sans-serif", color: DL_COLORS.fgPrimary,
+      color: DL_COLORS.fgPrimary,
     }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
-        {/* Animated icon */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 36 }}>
           <div style={{
             width: 72, height: 72, borderRadius: 20,
@@ -187,13 +168,12 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             animation: 'processingPulse 2s ease-in-out infinite',
           }}>
-            <Icon name={STEPS_DATA[activeStep].icon} size={30} style={{ color: DL_COLORS.accent }} />
+            <Icon name={STEP_ICONS[activeStep]} size={30} style={{ color: DL_COLORS.accent }} />
           </div>
         </div>
 
-        {/* Step labels */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 36 }}>
-          {STEPS_DATA.map((s, i) => {
+          {Array.isArray(processingSteps) && processingSteps.map((s, i) => {
             const isCompleted = completedSteps.includes(i);
             const isActive    = activeStep === i && !isCompleted;
             const col = isCompleted ? DL_COLORS.accent : isActive ? DL_COLORS.fgPrimary : DL_COLORS.fgMuted;
@@ -207,7 +187,7 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
                 }}>
                   {isCompleted
                     ? <Icon name="check" size={14} style={{ color: DL_COLORS.accent }} />
-                    : <Icon name={s.icon} size={14} style={{ color: col }} />
+                    : <Icon name={STEP_ICONS[i]} size={14} style={{ color: col }} />
                   }
                 </div>
                 <div>
@@ -219,7 +199,6 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
           })}
         </div>
 
-        {/* Progress bar */}
         <div style={{ height: 4, background: DL_COLORS.bgRaised, borderRadius: 100, overflow: 'hidden' }}>
           <div style={{
             height: '100%', background: DL_COLORS.accent, borderRadius: 100,
@@ -228,7 +207,7 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: DL_COLORS.fgMuted }}>
-          This usually takes 15–30 seconds
+          {t('processing.footer')}
         </div>
       </div>
     </div>

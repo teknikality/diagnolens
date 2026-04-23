@@ -2,20 +2,11 @@ import { useState, useRef } from 'react';
 import { DL_COLORS } from '../../tokens.js';
 import Icon from '../Icon.jsx';
 import DLLogo from '../DLLogo.jsx';
+import { useLang } from '../../i18n/LangContext.jsx';
 
 const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/heic', 'image/webp'];
 const ACCEPTED_EXTS  = ['pdf', 'jpg', 'jpeg', 'png', 'heic', 'webp'];
 const MAX_BYTES      = 20 * 1024 * 1024;
-
-function validateFile(file) {
-  if (!file) return 'No file selected.';
-  const ext = file.name.split('.').pop().toLowerCase();
-  if (!ACCEPTED_TYPES.includes(file.type) && !ACCEPTED_EXTS.includes(ext))
-    return 'Please upload a PDF or an image (JPG, PNG, HEIC, WebP).';
-  if (file.size > MAX_BYTES)
-    return 'This file is over 20 MB. Try a compressed version or a lower-resolution scan.';
-  return null;
-}
 
 function fmtSize(bytes) {
   if (bytes < 1024) return bytes + ' B';
@@ -24,9 +15,20 @@ function fmtSize(bytes) {
 }
 
 export default function UploadStep({ onDone, hasProgress, restoredFileName, restoredStep }) {
+  const { t } = useLang();
   const [dragOver, setDragOver]   = useState(false);
   const [selection, setSelection] = useState(null);
   const fileInputRef = useRef(null);
+
+  const validateFile = (file) => {
+    if (!file) return 'No file selected.';
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!ACCEPTED_TYPES.includes(file.type) && !ACCEPTED_EXTS.includes(ext))
+      return t('upload.errorInvalid');
+    if (file.size > MAX_BYTES)
+      return t('upload.errorSize');
+    return null;
+  };
 
   const pick = (f) => {
     if (!f) return;
@@ -43,10 +45,8 @@ export default function UploadStep({ onDone, hasProgress, restoredFileName, rest
     minHeight: 'calc(var(--vh, 1vh) * 100)', background: DL_COLORS.bgBase,
     display: 'flex', flexDirection: 'column', alignItems: 'center',
     justifyContent: 'center', padding: '32px 20px',
-    fontFamily: "'DM Sans', sans-serif",
   };
 
-  // ── File selected state ───────────────────────────────────────
   if (selection) {
     return (
       <div style={wrapStyle}>
@@ -87,9 +87,8 @@ export default function UploadStep({ onDone, hasProgress, restoredFileName, rest
                   width: '100%', background: DL_COLORS.bgSurface, color: DL_COLORS.fgPrimary,
                   border: `1px solid ${DL_COLORS.border}`, borderRadius: 12,
                   padding: '13px 24px', fontSize: 14, fontWeight: 500, cursor: 'pointer',
-                  fontFamily: "'DM Sans', sans-serif",
                 }}
-              >Choose a different file</button>
+              >{t('upload.chooseDifferent')}</button>
             </>
           ) : (
             <>
@@ -101,7 +100,7 @@ export default function UploadStep({ onDone, hasProgress, restoredFileName, rest
                 }}>
                   <Icon name="rotate-ccw" size={14} style={{ color: DL_COLORS.accent, flexShrink: 0 }} />
                   <span style={{ fontSize: 13, color: DL_COLORS.fgSecondary }}>
-                    Your previous answers are saved — you'll continue from question {restoredStep + 1}.
+                    {t('upload.savedResume', { n: restoredStep + 1 })}
                   </span>
                 </div>
               )}
@@ -128,14 +127,14 @@ export default function UploadStep({ onDone, hasProgress, restoredFileName, rest
                   onClick={reset}
                   style={{
                     background: 'none', border: 'none', cursor: 'pointer', padding: 4,
-                    color: DL_COLORS.fgMuted, fontFamily: "'DM Sans', sans-serif", fontSize: 12,
+                    color: DL_COLORS.fgMuted, fontSize: 12,
                     display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, transition: 'color 150ms',
                   }}
                   onMouseEnter={e => e.currentTarget.style.color = DL_COLORS.fgPrimary}
                   onMouseLeave={e => e.currentTarget.style.color = DL_COLORS.fgMuted}
                 >
                   <Icon name="x" size={14} />
-                  Change
+                  {t('upload.change')}
                 </button>
               </div>
 
@@ -145,11 +144,10 @@ export default function UploadStep({ onDone, hasProgress, restoredFileName, rest
                   width: '100%', background: DL_COLORS.accent, color: '#0a1a16',
                   border: 'none', borderRadius: 12, padding: '15px 24px',
                   fontSize: 15, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: "'DM Sans', sans-serif",
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}
               >
-                {hasProgress ? `Continue from question ${restoredStep + 1}` : 'Continue'}
+                {hasProgress ? t('upload.continueFromStep', { n: restoredStep + 1 }) : t('upload.continueBtn')}
                 <Icon name="arrow-right" size={16} />
               </button>
             </>
@@ -159,7 +157,6 @@ export default function UploadStep({ onDone, hasProgress, restoredFileName, rest
     );
   }
 
-  // ── Idle / drop zone ──────────────────────────────────────────
   return (
     <div style={wrapStyle}>
       <input
@@ -175,10 +172,10 @@ export default function UploadStep({ onDone, hasProgress, restoredFileName, rest
         </div>
 
         <h1 style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 8, textAlign: 'center', color: DL_COLORS.fgPrimary }}>
-          Upload your lab report
+          {t('upload.title')}
         </h1>
         <p style={{ fontSize: 14, color: DL_COLORS.fgMuted, textAlign: 'center', marginBottom: hasProgress ? 16 : 28, lineHeight: 1.6 }}>
-          PDF, image, or screenshot · up to 20 MB
+          {t('upload.sub')}
         </p>
 
         {hasProgress && (
@@ -189,9 +186,9 @@ export default function UploadStep({ onDone, hasProgress, restoredFileName, rest
           }}>
             <Icon name="rotate-ccw" size={14} style={{ color: DL_COLORS.accent, flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, color: DL_COLORS.fgPrimary, fontWeight: 500, marginBottom: 1 }}>Previous answers saved</div>
+              <div style={{ fontSize: 13, color: DL_COLORS.fgPrimary, fontWeight: 500, marginBottom: 1 }}>{t('upload.savedProgress')}</div>
               <div style={{ fontSize: 12, color: DL_COLORS.fgMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {restoredFileName || 'Re-upload your file to continue'}
+                {restoredFileName || t('upload.savedProgressSub2')}
               </div>
             </div>
           </div>
@@ -220,31 +217,31 @@ export default function UploadStep({ onDone, hasProgress, restoredFileName, rest
             <Icon name="upload-cloud" size={26} style={{ color: dragOver ? DL_COLORS.accent : DL_COLORS.fgMuted }} />
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: DL_COLORS.fgPrimary, marginBottom: 4 }}>Drop your report here</div>
-            <div style={{ fontSize: 13, color: DL_COLORS.fgMuted }}>or tap to browse files</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: DL_COLORS.fgPrimary, marginBottom: 4 }}>{t('upload.dropHere')}</div>
+            <div style={{ fontSize: 13, color: DL_COLORS.fgMuted }}>{t('upload.orTap')}</div>
           </div>
           <button
             onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}
             style={{
               background: DL_COLORS.accent, color: '#0a1a16', border: 'none',
               borderRadius: 10, padding: '11px 24px', fontSize: 14, fontWeight: 600,
-              cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+              cursor: 'pointer',
             }}
-          >Choose file</button>
+          >{t('upload.chooseFile')}</button>
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginBottom: 20 }}>
-          {['Blood panel', 'Lipid panel', 'Thyroid', 'HbA1c', 'Metabolic panel', 'Urine'].map(t => (
-            <span key={t} style={{
+          {t('upload.tags').map(tag => (
+            <span key={tag} style={{
               fontSize: 11, color: DL_COLORS.fgMuted, background: DL_COLORS.bgRaised,
               border: `1px solid ${DL_COLORS.border}`, borderRadius: 100, padding: '3px 10px',
-            }}>{t}</span>
+            }}>{tag}</span>
           ))}
         </div>
 
         <p style={{ fontSize: 12, color: DL_COLORS.fgMuted, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, margin: 0 }}>
           <Icon name="lock" size={12} style={{ color: DL_COLORS.fgMuted }} />
-          Your report is encrypted and never shared
+          {t('upload.privacy')}
         </p>
       </div>
     </div>

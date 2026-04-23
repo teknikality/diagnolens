@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { DL_COLORS } from '../tokens.js';
 import Icon from './Icon.jsx';
 import DLLogo from './DLLogo.jsx';
+import { useLang, LanguageSwitcher } from '../i18n/LangContext.jsx';
 
 export default function LandingPage({ onGetStarted }) {
+  const { t } = useLang();
   const [entered, setEntered] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setEntered(true), 60); return () => clearTimeout(t); }, []);
+  useEffect(() => { const id = setTimeout(() => setEntered(true), 60); return () => clearTimeout(id); }, []);
 
   const fadeUp = (delay = 0) => ({
     opacity: entered ? 1 : 0,
@@ -13,11 +15,13 @@ export default function LandingPage({ onGetStarted }) {
     transition: `opacity 550ms ${delay}ms cubic-bezier(0.16,1,0.3,1), transform 550ms ${delay}ms cubic-bezier(0.16,1,0.3,1)`,
   });
 
+  const steps = t('landing.steps');
+  const stepIcons = ['upload-cloud', 'user-check', 'sparkles'];
+
   return (
     <div style={{
       minHeight: 'calc(var(--vh, 1vh) * 100)', background: DL_COLORS.bgBase,
-      fontFamily: "'DM Sans', sans-serif", color: DL_COLORS.fgPrimary,
-      display: 'flex', flexDirection: 'column',
+      color: DL_COLORS.fgPrimary, display: 'flex', flexDirection: 'column',
     }}>
       {/* Topbar */}
       <nav style={{
@@ -28,14 +32,17 @@ export default function LandingPage({ onGetStarted }) {
           <DLLogo size={26} />
           <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.02em' }}>DiagnoLens</span>
         </div>
-        <button
-          onClick={onGetStarted}
-          style={{
-            background: 'transparent', border: `1px solid ${DL_COLORS.border}`,
-            borderRadius: 8, padding: '7px 14px', color: DL_COLORS.fgSecondary,
-            fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
-          }}
-        >Sign in</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <LanguageSwitcher />
+          <button
+            onClick={onGetStarted}
+            style={{
+              background: 'transparent', border: `1px solid ${DL_COLORS.border}`,
+              borderRadius: 8, padding: '7px 14px', color: DL_COLORS.fgSecondary,
+              fontSize: 13, fontWeight: 500, cursor: 'pointer',
+            }}
+          >{t('landing.signIn')}</button>
+        </div>
       </nav>
 
       {/* Hero */}
@@ -51,7 +58,7 @@ export default function LandingPage({ onGetStarted }) {
           borderRadius: 100, padding: '5px 13px', marginBottom: 24,
         }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: DL_COLORS.accent, flexShrink: 0 }} />
-          <span style={{ fontSize: 12, color: DL_COLORS.accent, fontWeight: 500 }}>AI-powered lab report analysis</span>
+          <span style={{ fontSize: 12, color: DL_COLORS.accent, fontWeight: 500 }}>{t('landing.badge')}</span>
         </div>
 
         <h1 style={{
@@ -60,8 +67,8 @@ export default function LandingPage({ onGetStarted }) {
           fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1,
           margin: '0 0 16px',
         }}>
-          Understand your lab report{' '}
-          <span style={{ color: DL_COLORS.accent }}>in minutes</span>
+          {t('landing.heroTitle')}{' '}
+          <span style={{ color: DL_COLORS.accent }}>{t('landing.heroHighlight')}</span>
         </h1>
 
         <p style={{
@@ -69,7 +76,7 @@ export default function LandingPage({ onGetStarted }) {
           fontSize: 16, color: DL_COLORS.fgSecondary, lineHeight: 1.65,
           margin: '0 0 36px', maxWidth: 400,
         }}>
-          Simple, personalized insights based on your health. No medical background needed.
+          {t('landing.heroSub')}
         </p>
 
         <div style={{ ...fadeUp(200), width: '100%', maxWidth: 340 }}>
@@ -79,7 +86,7 @@ export default function LandingPage({ onGetStarted }) {
               width: '100%', background: DL_COLORS.accent, color: '#0a1a16',
               border: 'none', borderRadius: 12, padding: '16px 24px',
               fontSize: 16, fontWeight: 600, cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif", letterSpacing: '-0.01em',
+              letterSpacing: '-0.01em',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               transition: 'all 150ms', boxShadow: '0 4px 24px rgba(0,201,167,0.25)',
             }}
@@ -87,10 +94,10 @@ export default function LandingPage({ onGetStarted }) {
             onMouseLeave={e => { e.currentTarget.style.background = DL_COLORS.accent; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,201,167,0.25)'; }}
           >
             <Icon name="upload-cloud" size={18} />
-            Upload your report
+            {t('landing.uploadCta')}
           </button>
           <p style={{ fontSize: 12, color: DL_COLORS.fgMuted, marginTop: 10, textAlign: 'center' }}>
-            Free · No account required · Results in seconds
+            {t('landing.heroBadge')}
           </p>
         </div>
       </section>
@@ -99,11 +106,11 @@ export default function LandingPage({ onGetStarted }) {
       <section style={{ borderTop: `1px solid ${DL_COLORS.border}`, borderBottom: `1px solid ${DL_COLORS.border}`, padding: '20px 24px' }}>
         <div style={{ maxWidth: 640, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           {[
-            { icon: 'lock',         text: 'End-to-end encrypted' },
-            { icon: 'shield-check', text: 'Data never shared' },
-            { icon: 'zap',          text: 'Results in seconds' },
+            { icon: 'lock',         text: t('landing.trust.encrypted') },
+            { icon: 'shield-check', text: t('landing.trust.notShared') },
+            { icon: 'zap',          text: t('landing.trust.fast') },
           ].map(({ icon, text }) => (
-            <div key={text} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '12px 8px', textAlign: 'center' }}>
+            <div key={icon} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '12px 8px', textAlign: 'center' }}>
               <div style={{
                 width: 36, height: 36, borderRadius: 10,
                 background: DL_COLORS.bgRaised, border: `1px solid ${DL_COLORS.border}`,
@@ -121,17 +128,13 @@ export default function LandingPage({ onGetStarted }) {
       <section style={{ padding: '52px 24px', maxWidth: 640, margin: '0 auto', width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: DL_COLORS.fgMuted, marginBottom: 10 }}>
-            How it works
+            {t('landing.howTitle')}
           </div>
-          <h2 style={{ fontSize: 'clamp(22px, 5vw, 30px)', fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>Three steps to clarity</h2>
+          <h2 style={{ fontSize: 'clamp(22px, 5vw, 30px)', fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>{t('landing.howSub')}</h2>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[
-            { n: '01', icon: 'upload-cloud', title: 'Upload your report',       body: 'Drop a PDF or photo of your lab results. We accept all common blood panel formats.' },
-            { n: '02', icon: 'user-check',   title: 'Answer a few questions',   body: 'Age, known conditions, lifestyle. Takes 60 seconds — makes results far more relevant.' },
-            { n: '03', icon: 'sparkles',     title: 'Get personalized insights', body: 'Every biomarker explained in plain English, flagged against your personal context.' },
-          ].map(({ n, icon, title, body }) => (
-            <div key={n} style={{
+          {Array.isArray(steps) && steps.map((step, i) => (
+            <div key={i} style={{
               display: 'flex', gap: 16, alignItems: 'flex-start',
               background: DL_COLORS.bgSurface, border: `1px solid ${DL_COLORS.border}`,
               borderRadius: 14, padding: '20px',
@@ -141,12 +144,14 @@ export default function LandingPage({ onGetStarted }) {
                 background: DL_COLORS.accentDim, border: `1px solid ${DL_COLORS.accentBorder}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Icon name={icon} size={18} style={{ color: DL_COLORS.accent }} />
+                <Icon name={stepIcons[i]} size={18} style={{ color: DL_COLORS.accent }} />
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', color: DL_COLORS.fgMuted, marginBottom: 4, textTransform: 'uppercase' }}>Step {n}</div>
-                <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, letterSpacing: '-0.01em' }}>{title}</div>
-                <div style={{ fontSize: 13, color: DL_COLORS.fgMuted, lineHeight: 1.6 }}>{body}</div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', color: DL_COLORS.fgMuted, marginBottom: 4, textTransform: 'uppercase' }}>
+                  {t('landing.stepPrefix')} {String(i + 1).padStart(2, '0')}
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, letterSpacing: '-0.01em' }}>{step.title}</div>
+                <div style={{ fontSize: 13, color: DL_COLORS.fgMuted, lineHeight: 1.6 }}>{step.body}</div>
               </div>
             </div>
           ))}
@@ -155,14 +160,14 @@ export default function LandingPage({ onGetStarted }) {
 
       {/* Supported types */}
       <section style={{ padding: '0 24px 36px', maxWidth: 640, margin: '0 auto', width: '100%', textAlign: 'center' }}>
-        <div style={{ fontSize: 12, color: DL_COLORS.fgMuted, marginBottom: 10 }}>Supports reports including</div>
+        <div style={{ fontSize: 12, color: DL_COLORS.fgMuted, marginBottom: 10 }}>{t('landing.supportsTitle')}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
-          {['CBC / Complete blood count', 'Lipid panel', 'Thyroid (TSH, T3, T4)', 'HbA1c', 'Metabolic panel', 'Urine analysis', 'Liver function'].map(t => (
-            <span key={t} style={{
+          {t('landing.supportedTypes').map(item => (
+            <span key={item} style={{
               fontSize: 12, color: DL_COLORS.fgMuted,
               background: DL_COLORS.bgSurface, border: `1px solid ${DL_COLORS.border}`,
               borderRadius: 100, padding: '4px 12px',
-            }}>{t}</span>
+            }}>{item}</span>
           ))}
         </div>
       </section>
@@ -175,10 +180,10 @@ export default function LandingPage({ onGetStarted }) {
       }}>
         <div style={{ maxWidth: 400, margin: '0 auto' }}>
           <h2 style={{ fontSize: 'clamp(22px, 5vw, 30px)', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 12 }}>
-            Ready to understand your results?
+            {t('landing.ctaTitle')}
           </h2>
           <p style={{ fontSize: 14, color: DL_COLORS.fgMuted, marginBottom: 28 }}>
-            Upload any lab report and get a plain-language breakdown in seconds.
+            {t('landing.ctaSub')}
           </p>
           <button
             onClick={onGetStarted}
@@ -186,13 +191,13 @@ export default function LandingPage({ onGetStarted }) {
               width: '100%', background: DL_COLORS.accent, color: '#0a1a16',
               border: 'none', borderRadius: 12, padding: '16px 24px',
               fontSize: 16, fontWeight: 600, cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif", letterSpacing: '-0.01em',
+              letterSpacing: '-0.01em',
               transition: 'all 150ms', boxShadow: '0 4px 24px rgba(0,201,167,0.2)',
             }}
             onMouseEnter={e => { e.currentTarget.style.background = DL_COLORS.accentHover; }}
             onMouseLeave={e => { e.currentTarget.style.background = DL_COLORS.accent; }}
           >
-            Start now — it's free
+            {t('landing.ctaBtn')}
           </button>
         </div>
       </section>

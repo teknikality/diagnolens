@@ -6,8 +6,9 @@ import Card from './Card.jsx';
 import SectionLabel from './SectionLabel.jsx';
 import EmptyState from './EmptyState.jsx';
 import BiomarkerModal from './BiomarkerModal.jsx';
+import { useLang } from '../i18n/LangContext.jsx';
 
-function SummaryHeader({ summary, biomarkers, fileName }) {
+function SummaryHeader({ summary, biomarkers, fileName, t }) {
   const counts = { normal: 0, caution: 0, warning: 0 };
   (biomarkers || []).forEach(b => { if (counts[b.status] !== undefined) counts[b.status]++; });
 
@@ -17,18 +18,18 @@ function SummaryHeader({ summary, biomarkers, fileName }) {
   return (
     <div style={{ marginBottom: 24 }}>
       <div style={{ marginBottom: 16 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 4 }}>Your lab report summary</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 4 }}>{t('dashboard.title')}</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: DL_COLORS.fgMuted }}>
           <Icon name="file-text" size={13} style={{ color: DL_COLORS.fgMuted }} />
-          {fileName ? `${fileName} · Analyzed just now` : 'Report analyzed just now'}
+          {fileName ? t('dashboard.analyzedNowFile', { file: fileName }) : t('dashboard.analyzedNow')}
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: explanation ? 16 : 0 }}>
         {[
-          { key: 'normal',  label: 'In range',      color: DL_COLORS.normal,  bg: DL_COLORS.normalBg,  icon: 'check-circle' },
-          { key: 'caution', label: 'Borderline',     color: DL_COLORS.caution, bg: DL_COLORS.cautionBg, icon: 'alert-circle' },
-          { key: 'warning', label: 'Elevated / Low', color: DL_COLORS.warning, bg: DL_COLORS.warningBg, icon: 'alert-triangle' },
+          { key: 'normal',  label: t('dashboard.inRange'),     color: DL_COLORS.normal,  bg: DL_COLORS.normalBg,  icon: 'check-circle' },
+          { key: 'caution', label: t('dashboard.borderline'),  color: DL_COLORS.caution, bg: DL_COLORS.cautionBg, icon: 'alert-circle' },
+          { key: 'warning', label: t('dashboard.elevatedLow'), color: DL_COLORS.warning, bg: DL_COLORS.warningBg, icon: 'alert-triangle' },
         ].map(item => (
           <div key={item.key} style={{
             display: 'flex', alignItems: 'center', gap: 8,
@@ -48,14 +49,14 @@ function SummaryHeader({ summary, biomarkers, fileName }) {
           borderRadius: 10, padding: '12px 16px',
           fontSize: 13, color: DL_COLORS.fgSecondary, lineHeight: 1.7,
         }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: DL_COLORS.accent, marginRight: 8 }}>Summary</span>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: DL_COLORS.accent, marginRight: 8 }}>{t('dashboard.summaryLabel')}</span>
           {explanation}
         </div>
       )}
 
       {keyFindings.length > 0 && (
         <div style={{ marginTop: 10 }}>
-          <SectionLabel>Key findings</SectionLabel>
+          <SectionLabel>{t('dashboard.keyFindings')}</SectionLabel>
           <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 6, margin: 0 }}>
             {keyFindings.map((f, i) => (
               <li key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
@@ -76,7 +77,7 @@ function SummaryHeader({ summary, biomarkers, fileName }) {
   );
 }
 
-function TopConcerns({ biomarkers, onAction }) {
+function TopConcerns({ biomarkers, onAction, t }) {
   const concerns = (biomarkers || [])
     .filter(b => b.is_abnormal)
     .sort((a, b) => (b.status === 'warning' ? 1 : 0) - (a.status === 'warning' ? 1 : 0))
@@ -86,7 +87,7 @@ function TopConcerns({ biomarkers, onAction }) {
 
   return (
     <div style={{ marginBottom: 24 }}>
-      <SectionLabel>Top concerns</SectionLabel>
+      <SectionLabel>{t('dashboard.topConcerns')}</SectionLabel>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
         {concerns.map(b => {
           const meta = STATUS_META[b.status] || STATUS_META.info;
@@ -113,12 +114,12 @@ function TopConcerns({ biomarkers, onAction }) {
                 style={{
                   width: '100%', background: 'rgba(0,0,0,0.2)', border: `1px solid ${meta.color}25`,
                   borderRadius: 8, padding: '9px 14px', color: DL_COLORS.fgPrimary,
-                  fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 13, fontWeight: 500, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                 }}
               >
                 <Icon name="info" size={13} />
-                Understand this
+                {t('dashboard.understandThis')}
               </button>
             </div>
           );
@@ -128,13 +129,13 @@ function TopConcerns({ biomarkers, onAction }) {
   );
 }
 
-function BiomarkerActionCard({ biomarker: b, onAction }) {
+function BiomarkerActionCard({ biomarker: b, onAction, t }) {
   const meta = STATUS_META[b.status] || STATUS_META.info;
 
   const actions = [
-    { label: 'What this means', section: 0, icon: 'info' },
-    { label: 'What to do',      section: 2, icon: 'check-square' },
-    { label: 'How serious',     section: 3, icon: 'alert-triangle' },
+    { label: t('dashboard.actionMeaning'), section: 0, icon: 'info' },
+    { label: t('dashboard.actionTodo'),    section: 2, icon: 'check-square' },
+    { label: t('dashboard.actionSerious'), section: 3, icon: 'alert-triangle' },
   ];
 
   return (
@@ -157,7 +158,7 @@ function BiomarkerActionCard({ biomarker: b, onAction }) {
             </div>
             {b.reference_range ? (
               <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 10 }}>
-                Reference: {b.reference_range}{b.unit ? ' ' + b.unit : ''}
+                {t('modal.referenceLabel')} {b.reference_range}{b.unit ? ' ' + b.unit : ''}
               </div>
             ) : <div style={{ marginBottom: 10 }} />}
 
@@ -198,7 +199,7 @@ function BiomarkerActionCard({ biomarker: b, onAction }) {
               background: 'transparent', border: 'none',
               borderRight: i < actions.length - 1 ? `1px solid ${DL_COLORS.border}` : 'none',
               color: DL_COLORS.fgMuted, fontSize: 12, fontWeight: 500,
-              cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+              cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
               transition: 'background 150ms, color 150ms',
             }}
@@ -214,9 +215,9 @@ function BiomarkerActionCard({ biomarker: b, onAction }) {
   );
 }
 
-function WhatsAppSection() {
-  const [phone, setPhone] = useState('');
-  const [sent, setSent]   = useState(false);
+function WhatsAppSection({ t }) {
+  const [phone, setPhone]     = useState('');
+  const [sent, setSent]       = useState(false);
   const [sending, setSending] = useState(false);
 
   const handleSend = () => {
@@ -239,10 +240,8 @@ function WhatsAppSection() {
             <Icon name="message-circle" size={20} style={{ color: '#25D366' }} />
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: DL_COLORS.fgPrimary, marginBottom: 3 }}>Continue on WhatsApp</div>
-            <div style={{ fontSize: 12, color: DL_COLORS.fgMuted, lineHeight: 1.5 }}>
-              Get follow-up reminders and ask questions about your results — free, no app needed.
-            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: DL_COLORS.fgPrimary, marginBottom: 3 }}>{t('dashboard.whatsapp.title')}</div>
+            <div style={{ fontSize: 12, color: DL_COLORS.fgMuted, lineHeight: 1.5 }}>{t('dashboard.whatsapp.sub')}</div>
           </div>
         </div>
 
@@ -253,7 +252,7 @@ function WhatsAppSection() {
             borderRadius: 10, padding: '11px 14px',
           }}>
             <Icon name="check-circle" size={16} style={{ color: DL_COLORS.normal }} />
-            <span style={{ fontSize: 13, color: DL_COLORS.normal }}>Summary sent! Check WhatsApp for your results.</span>
+            <span style={{ fontSize: 13, color: DL_COLORS.normal }}>{t('dashboard.whatsapp.sent')}</span>
           </div>
         ) : (
           <div>
@@ -271,12 +270,12 @@ function WhatsAppSection() {
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSend()}
-                placeholder="Your phone number"
+                placeholder={t('dashboard.whatsapp.phonePlaceholder')}
                 style={{
                   flex: 1, minWidth: 0,
                   background: DL_COLORS.bgRaised, border: `1px solid ${DL_COLORS.border}`,
                   borderRadius: 8, padding: '9px 12px', color: DL_COLORS.fgPrimary,
-                  fontFamily: "'DM Sans', sans-serif", fontSize: 13, outline: 'none',
+                  fontSize: 13, outline: 'none',
                 }}
               />
               <button
@@ -288,17 +287,17 @@ function WhatsAppSection() {
                   borderRadius: 8, padding: '9px 16px',
                   color: ready ? 'white' : DL_COLORS.fgMuted,
                   fontSize: 13, fontWeight: 600, cursor: ready ? 'pointer' : 'not-allowed',
-                  fontFamily: "'DM Sans', sans-serif", transition: 'all 200ms', flexShrink: 0,
+                  transition: 'all 200ms', flexShrink: 0,
                   display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
                 }}
               >
                 <Icon name={sending ? 'loader' : 'send'} size={13} />
-                {sending ? 'Sending…' : 'Send'}
+                {sending ? t('dashboard.whatsapp.sending') : t('dashboard.whatsapp.send')}
               </button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: DL_COLORS.fgMuted }}>
               <Icon name="lock" size={10} style={{ color: DL_COLORS.fgMuted }} />
-              Your number is used only to send this report summary. Never shared or stored.
+              {t('dashboard.whatsapp.privacy')}
             </div>
           </div>
         )}
@@ -308,11 +307,12 @@ function WhatsAppSection() {
 }
 
 export default function DashboardView({ reportData, onSelectBiomarker }) {
-  const [modal, setModal] = useState(null);
+  const { t } = useLang();
+  const [modal, setModal]               = useState(null);
   const [sortImportant, setSortImportant] = useState(true);
 
   if (!reportData) {
-    return <EmptyState message="No report loaded. Upload a lab report to get started." />;
+    return <EmptyState message={t('dashboard.noReport')} />;
   }
 
   const biomarkers = reportData.biomarkers || [];
@@ -327,14 +327,19 @@ export default function DashboardView({ reportData, onSelectBiomarker }) {
   const openModal  = (biomarker, section) => setModal({ biomarker, section });
   const closeModal = () => setModal(null);
 
+  const bCount = biomarkers.length;
+  const biomarkerLabel = bCount === 1
+    ? t('dashboard.biomarkerCount', { n: bCount })
+    : t('dashboard.biomarkerCountPlural', { n: bCount });
+
   return (
     <div style={{ maxWidth: 820 }}>
-      <SummaryHeader summary={summary} biomarkers={biomarkers} fileName={fileName} />
-      <TopConcerns biomarkers={biomarkers} onAction={openModal} />
+      <SummaryHeader summary={summary} biomarkers={biomarkers} fileName={fileName} t={t} />
+      <TopConcerns biomarkers={biomarkers} onAction={openModal} t={t} />
 
       {biomarkers.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <SectionLabel>{biomarkers.length} biomarker{biomarkers.length !== 1 ? 's' : ''}</SectionLabel>
+          <SectionLabel>{biomarkerLabel}</SectionLabel>
           <div style={{ display: 'flex', gap: 6 }}>
             <button
               onClick={() => setSortImportant(true)}
@@ -343,12 +348,12 @@ export default function DashboardView({ reportData, onSelectBiomarker }) {
                 border: `1px solid ${sortImportant ? DL_COLORS.accentBorder : DL_COLORS.border}`,
                 background: sortImportant ? DL_COLORS.accentDim : 'transparent',
                 color: sortImportant ? DL_COLORS.accent : DL_COLORS.fgMuted,
-                fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 12, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 5, transition: 'all 150ms',
               }}
             >
               <Icon name="alert-triangle" size={11} />
-              Important first
+              {t('dashboard.importantFirst')}
             </button>
             <button
               onClick={() => setSortImportant(false)}
@@ -357,11 +362,11 @@ export default function DashboardView({ reportData, onSelectBiomarker }) {
                 border: `1px solid ${!sortImportant ? DL_COLORS.accentBorder : DL_COLORS.border}`,
                 background: !sortImportant ? DL_COLORS.accentDim : 'transparent',
                 color: !sortImportant ? DL_COLORS.accent : DL_COLORS.fgMuted,
-                fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 12, cursor: 'pointer',
                 transition: 'all 150ms',
               }}
             >
-              Original order
+              {t('dashboard.originalOrder')}
             </button>
           </div>
         </div>
@@ -369,13 +374,13 @@ export default function DashboardView({ reportData, onSelectBiomarker }) {
 
       {biomarkers.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {sorted.map(b => <BiomarkerActionCard key={b.name} biomarker={b} onAction={openModal} />)}
+          {sorted.map(b => <BiomarkerActionCard key={b.name} biomarker={b} onAction={openModal} t={t} />)}
         </div>
       ) : (
-        <EmptyState message="No biomarkers were detected in this report." />
+        <EmptyState message={t('dashboard.noBiomarkers')} />
       )}
 
-      <WhatsAppSection />
+      <WhatsAppSection t={t} />
 
       {modal && (
         <BiomarkerModal

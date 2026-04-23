@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom';
 import { DL_COLORS, STATUS_META } from '../tokens.js';
 import Icon from './Icon.jsx';
 import Badge from './Badge.jsx';
+import { useLang } from '../i18n/LangContext.jsx';
 
-function SectionContent({ section, biomarker }) {
+function SectionContent({ section, biomarker, t }) {
   const meta = STATUS_META[biomarker.status];
 
   const header = (
@@ -23,27 +24,26 @@ function SectionContent({ section, biomarker }) {
   let body;
 
   if (section.isCustom === 'reference') {
+    const statusKey = biomarker.apiStatus;
+    const statusDesc = t(`modal.statusDesc.${statusKey}`) === `modal.statusDesc.${statusKey}`
+      ? t('modal.statusDesc.unknown')
+      : t(`modal.statusDesc.${statusKey}`);
+
     body = (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ background: DL_COLORS.bgRaised, borderRadius: 10, padding: 16, border: `1px solid ${DL_COLORS.border}` }}>
-          <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 4 }}>Reference range</div>
+          <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 4 }}>{t('modal.referenceRange')}</div>
           <div style={{ fontSize: 15, fontFamily: "'JetBrains Mono', monospace", color: DL_COLORS.fgPrimary, fontWeight: 500 }}>
-            {biomarker.reference_range || 'Not specified'}
+            {biomarker.reference_range || t('modal.notSpecified')}
           </div>
         </div>
         <div style={{ background: meta.bg, borderRadius: 10, padding: 16, border: `1px solid ${meta.color}40` }}>
-          <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 4 }}>Your result status</div>
+          <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 4 }}>{t('modal.yourStatus')}</div>
           <div style={{ fontSize: 14, color: meta.color, fontWeight: 600 }}>{meta.label}</div>
-          <div style={{ fontSize: 12, color: DL_COLORS.fgMuted, marginTop: 4 }}>
-            {biomarker.apiStatus === 'NORMAL'     ? 'This value falls within the normal reference range.' :
-             biomarker.apiStatus === 'HIGH'        ? 'This value is above the upper limit of the reference range.' :
-             biomarker.apiStatus === 'LOW'         ? 'This value is below the lower limit of the reference range.' :
-             biomarker.apiStatus === 'BORDERLINE'  ? 'This value is close to the boundary of the reference range.' :
-             'The status for this biomarker could not be determined automatically.'}
-          </div>
+          <div style={{ fontSize: 12, color: DL_COLORS.fgMuted, marginTop: 4 }}>{statusDesc}</div>
         </div>
         <div style={{ background: DL_COLORS.bgRaised, borderRadius: 10, padding: 16, border: `1px solid ${DL_COLORS.border}` }}>
-          <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 4 }}>Category</div>
+          <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 4 }}>{t('modal.category')}</div>
           <div style={{ fontSize: 14, color: DL_COLORS.fgPrimary }}>{biomarker.category || 'General'}</div>
         </div>
       </div>
@@ -52,7 +52,7 @@ function SectionContent({ section, biomarker }) {
     body = (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <p style={{ fontSize: 14, color: DL_COLORS.fgSecondary, lineHeight: 1.75, margin: 0 }}>
-          {`Keep track of your ${biomarker.name} over time to identify trends. Consistent monitoring helps you and your doctor catch changes early.`}
+          {t('modal.monitorText', { name: biomarker.name })}
         </p>
         <div style={{
           background: DL_COLORS.accentDim, border: `1px solid ${DL_COLORS.accentBorder}`,
@@ -61,7 +61,7 @@ function SectionContent({ section, biomarker }) {
         }}>
           <Icon name="shield" size={16} style={{ color: DL_COLORS.accent, flexShrink: 0, marginTop: 1 }} />
           <div style={{ fontSize: 13, color: DL_COLORS.fgSecondary, lineHeight: 1.65 }}>
-            Always discuss your results with a qualified healthcare professional before making changes to medication or treatment.
+            {t('modal.disclaimer')}
           </div>
         </div>
         {biomarker.is_abnormal && (
@@ -72,7 +72,7 @@ function SectionContent({ section, biomarker }) {
           }}>
             <Icon name="alert-circle" size={16} style={{ color: DL_COLORS.warning, flexShrink: 0, marginTop: 1 }} />
             <div style={{ fontSize: 13, color: DL_COLORS.fgSecondary, lineHeight: 1.65 }}>
-              {`Your ${biomarker.name} is currently outside the reference range. Consider scheduling a follow-up with your doctor to review this result.`}
+              {t('modal.abnormalWarning', { name: biomarker.name })}
             </div>
           </div>
         )}
@@ -103,6 +103,7 @@ function SectionContent({ section, biomarker }) {
 }
 
 export default function BiomarkerModal({ biomarker, initialSection, onClose }) {
+  const { t } = useLang();
   const [activeSection, setActiveSection] = useState(initialSection || 0);
   const [entered, setEntered] = useState(false);
 
@@ -111,16 +112,16 @@ export default function BiomarkerModal({ biomarker, initialSection, onClose }) {
   if (!biomarker) return null;
 
   const advice = biomarker.insight?.advice || [];
-  const mid = Math.ceil(advice.length / 2);
-  const steps = advice.slice(0, Math.max(mid, 1));
-  const plan = advice.slice(mid);
+  const mid    = Math.ceil(advice.length / 2);
+  const steps  = advice.slice(0, Math.max(mid, 1));
+  const plan   = advice.slice(mid);
 
   const sections = [
-    { id: 'means',   label: 'What this means',   icon: 'info',           content: biomarker.insight?.meaning || 'No detailed information available.' },
-    { id: 'context', label: 'Reference context', icon: 'bar-chart-2',    isCustom: 'reference' },
-    { id: 'steps',   label: 'What you can do',   icon: 'check-square',   content: steps.length ? steps : ['Maintain healthy lifestyle habits: balanced diet, regular exercise, and adequate sleep.'] },
-    { id: 'plan',    label: 'Action plan',        icon: 'clipboard-list', content: plan.length  ? plan  : ['Follow up with your healthcare provider to review this result.'] },
-    { id: 'monitor', label: 'When to act',        icon: 'activity',       isCustom: 'monitor' },
+    { id: 'means',   label: t('modal.sections.means'),   icon: 'info',           content: biomarker.insight?.meaning || t('modal.defaultMeaning') },
+    { id: 'context', label: t('modal.sections.context'),  icon: 'bar-chart-2',    isCustom: 'reference' },
+    { id: 'steps',   label: t('modal.sections.steps'),    icon: 'check-square',   content: steps.length ? steps : [t('modal.defaultStep')] },
+    { id: 'plan',    label: t('modal.sections.plan'),     icon: 'clipboard-list', content: plan.length  ? plan  : [t('modal.defaultPlan')] },
+    { id: 'monitor', label: t('modal.sections.monitor'),  icon: 'activity',       isCustom: 'monitor' },
   ];
 
   const meta = STATUS_META[biomarker.status];
@@ -132,7 +133,6 @@ export default function BiomarkerModal({ biomarker, initialSection, onClose }) {
         position: 'fixed', inset: 0, zIndex: 1000,
         background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'flex-end',
-        fontFamily: "'DM Sans', sans-serif",
         opacity: entered ? 1 : 0,
         transition: 'opacity 250ms cubic-bezier(0.16,1,0.3,1)',
       }}
@@ -169,7 +169,7 @@ export default function BiomarkerModal({ biomarker, initialSection, onClose }) {
                 borderRadius: 100, padding: '3px 10px',
               }}>
                 <Icon name="alert-triangle" size={11} style={{ color: DL_COLORS.warning }} />
-                <span style={{ fontSize: 11, color: DL_COLORS.warning }}>Outside reference range</span>
+                <span style={{ fontSize: 11, color: DL_COLORS.warning }}>{t('modal.outsideRange')}</span>
               </div>
             )}
           </div>
@@ -192,7 +192,7 @@ export default function BiomarkerModal({ biomarker, initialSection, onClose }) {
           </span>
           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: DL_COLORS.fgMuted }}>{biomarker.unit}</span>
           {biomarker.reference_range && (
-            <span style={{ fontSize: 12, color: DL_COLORS.fgMuted }}>Reference: {biomarker.reference_range}</span>
+            <span style={{ fontSize: 12, color: DL_COLORS.fgMuted }}>{t('modal.referenceLabel')} {biomarker.reference_range}</span>
           )}
         </div>
 
@@ -210,7 +210,7 @@ export default function BiomarkerModal({ biomarker, initialSection, onClose }) {
                 padding: '8px 14px', fontSize: 13, fontWeight: activeSection === i ? 600 : 400,
                 color: activeSection === i ? DL_COLORS.fgPrimary : DL_COLORS.fgMuted,
                 borderBottom: activeSection === i ? `2px solid ${DL_COLORS.accent}` : '2px solid transparent',
-                whiteSpace: 'nowrap', fontFamily: "'DM Sans', sans-serif",
+                whiteSpace: 'nowrap',
                 transition: 'all 150ms', marginBottom: -1,
               }}
             >{s.label}</button>
@@ -219,7 +219,7 @@ export default function BiomarkerModal({ biomarker, initialSection, onClose }) {
 
         {/* Content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 24px 32px' }}>
-          <SectionContent section={sections[activeSection]} biomarker={biomarker} />
+          <SectionContent section={sections[activeSection]} biomarker={biomarker} t={t} />
         </div>
 
         {/* Footer nav */}
@@ -233,24 +233,24 @@ export default function BiomarkerModal({ biomarker, initialSection, onClose }) {
               style={{
                 background: DL_COLORS.bgRaised, border: `1px solid ${DL_COLORS.border}`,
                 borderRadius: 8, padding: '8px 14px', color: DL_COLORS.fgSecondary,
-                fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 6,
               }}
             >
               <Icon name="chevron-left" size={14} />
-              Previous
+              {t('modal.previous')}
             </button>
           ) : (
             <button
               onClick={onClose}
               style={{
                 background: 'none', border: 'none', color: DL_COLORS.fgMuted,
-                fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 6,
               }}
             >
               <Icon name="chevron-left" size={14} />
-              Back to report
+              {t('modal.backToReport')}
             </button>
           )}
           <span style={{ fontSize: 12, color: DL_COLORS.fgMuted }}>{activeSection + 1} / {sections.length}</span>
@@ -260,11 +260,11 @@ export default function BiomarkerModal({ biomarker, initialSection, onClose }) {
               style={{
                 background: DL_COLORS.accent, border: 'none',
                 borderRadius: 8, padding: '8px 16px', color: '#0a1a16',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 6,
               }}
             >
-              Next
+              {t('modal.next')}
               <Icon name="chevron-right" size={14} />
             </button>
           ) : (
@@ -273,9 +273,9 @@ export default function BiomarkerModal({ biomarker, initialSection, onClose }) {
               style={{
                 background: DL_COLORS.accent, border: 'none',
                 borderRadius: 8, padding: '8px 16px', color: '#0a1a16',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
               }}
-            >Done</button>
+            >{t('modal.done')}</button>
           )}
         </div>
       </div>

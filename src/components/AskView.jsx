@@ -2,12 +2,15 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { DL_COLORS } from '../tokens.js';
 import Icon from './Icon.jsx';
 import Button from './Button.jsx';
+import { useLang } from '../i18n/LangContext.jsx';
 
 export default function AskView({ reportData }) {
-  const [messages, setMessages] = useState([
-    { role: 'assistant', text: "Hi — I'm DiagnoLens. Ask me anything about your results, and I'll explain in plain language." }
+  const { t } = useLang();
+
+  const [messages, setMessages] = useState(() => [
+    { role: 'assistant', text: t('ask.greeting') }
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput]   = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
 
@@ -24,14 +27,14 @@ export default function AskView({ reportData }) {
 
   const suggestions = useMemo(() => {
     if (!reportData?.biomarkers?.length) {
-      return ['Which results should I discuss with my doctor?', 'What do these numbers mean?'];
+      return [t('ask.suggestionDoctor'), t('ask.suggestionMean')];
     }
     const abnormal = reportData.biomarkers.filter(b => b.is_abnormal).slice(0, 2);
     return [
-      ...abnormal.map(b => `What does my ${b.name} result mean?`),
-      'Which results should I discuss with my doctor?',
+      ...abnormal.map(b => t('ask.suggestionAbnormal', { name: b.name })),
+      t('ask.suggestionDoctor'),
     ].slice(0, 3);
-  }, [reportData]);
+  }, [reportData, t]);
 
   const send = async (text) => {
     const q = (text || input).trim();
@@ -49,9 +52,9 @@ export default function AskView({ reportData }) {
           content: `You are DiagnoLens, a helpful health analysis assistant. ${ctx} Answer the following question in plain language, clearly and concisely. Always recommend discussing with a physician before making clinical decisions. Question: ${q}`
         }]
       });
-      setMessages(m => [...m, { role: 'assistant', text: reply || 'I had trouble getting a response. Please try again.' }]);
+      setMessages(m => [...m, { role: 'assistant', text: reply || t('ask.errorReply') }]);
     } catch {
-      setMessages(m => [...m, { role: 'assistant', text: "I'm having a bit of trouble right now — please try again in a moment." }]);
+      setMessages(m => [...m, { role: 'assistant', text: t('ask.errorNetwork') }]);
     }
     setLoading(false);
   };
@@ -96,7 +99,7 @@ export default function AskView({ reportData }) {
               style={{
                 background: DL_COLORS.bgRaised, border: `1px solid ${DL_COLORS.border}`,
                 borderRadius: 100, padding: '6px 12px', color: DL_COLORS.fgSecondary,
-                fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 12, cursor: 'pointer',
                 transition: 'all 150ms',
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = DL_COLORS.accentBorder; e.currentTarget.style.color = DL_COLORS.accent; }}
@@ -112,11 +115,11 @@ export default function AskView({ reportData }) {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
-          placeholder="Ask about your results…"
+          placeholder={t('ask.placeholder')}
           style={{
             flex: 1, background: DL_COLORS.bgRaised, border: `1px solid ${DL_COLORS.border}`,
             borderRadius: 8, padding: '10px 14px', color: DL_COLORS.fgPrimary,
-            fontFamily: "'DM Sans', sans-serif", fontSize: 13, outline: 'none',
+            fontSize: 13, outline: 'none',
           }}
         />
         <Button variant="primary" onClick={() => send()} disabled={!input.trim() || loading}>

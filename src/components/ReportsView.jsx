@@ -4,24 +4,31 @@ import Badge from './Badge.jsx';
 import Card from './Card.jsx';
 import Button from './Button.jsx';
 import EmptyState from './EmptyState.jsx';
+import { useLang } from '../i18n/LangContext.jsx';
 
 export default function ReportsView({ reportData, onSelect }) {
-  const biomarkers = reportData?.biomarkers || [];
+  const { t } = useLang();
+  const biomarkers    = reportData?.biomarkers || [];
   const abnormalCount = biomarkers.filter(b => b.is_abnormal).length;
   const overallStatus = abnormalCount > 2 ? 'warning' : abnormalCount > 0 ? 'caution' : 'normal';
+
+  const bCount = biomarkers.length;
+  const bioLabel = bCount === 1
+    ? t('reports.biomarkerCount', { n: bCount })
+    : t('reports.biomarkerCountPlural', { n: bCount });
 
   return (
     <div style={{ maxWidth: 600 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>My reports</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>{t('reports.title')}</h1>
         <Button variant="primary" size="sm">
           <Icon name="upload-cloud" size={13} />
-          Upload new
+          {t('reports.uploadNew')}
         </Button>
       </div>
 
       {!reportData ? (
-        <EmptyState message="No reports yet. Upload your first blood panel to get started." />
+        <EmptyState message={t('reports.noReports')} />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Card
@@ -40,16 +47,16 @@ export default function ReportsView({ reportData, onSelect }) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                   <div style={{ fontSize: 13, fontWeight: 500, color: DL_COLORS.fgPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {reportData.fileName || 'Uploaded report'}
+                    {reportData.fileName || t('reports.uploadedReport')}
                   </div>
                   <span style={{
                     fontSize: 10, fontWeight: 600, color: DL_COLORS.accent,
                     background: DL_COLORS.accentDim, border: `1px solid ${DL_COLORS.accentBorder}`,
                     borderRadius: 100, padding: '1px 7px', flexShrink: 0,
-                  }}>Latest</span>
+                  }}>{t('reports.latest')}</span>
                 </div>
                 <div style={{ fontSize: 11, color: DL_COLORS.fgMuted }}>
-                  {biomarkers.length} biomarker{biomarkers.length !== 1 ? 's' : ''}  ·  {abnormalCount} outside range
+                  {bioLabel}  ·  {t('reports.outsideRange', { n: abnormalCount })}
                 </div>
               </div>
               <Badge status={overallStatus} />

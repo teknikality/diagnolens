@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DL_COLORS } from '../tokens.js';
 import Icon from './Icon.jsx';
 import DLLogo from './DLLogo.jsx';
+import { useLang, LanguageSwitcher } from '../i18n/LangContext.jsx';
 
 function SideNavItem({ icon, label, active, collapsed, onClick }) {
   const [hov, setHov] = useState(false);
@@ -31,12 +32,12 @@ function SideNavItem({ icon, label, active, collapsed, onClick }) {
   );
 }
 
-function UploadNavBtn({ onClick, collapsed }) {
+function UploadNavBtn({ label, onClick, collapsed }) {
   const [hov, setHov] = useState(false);
   return (
     <div
       onClick={onClick}
-      title={collapsed ? 'Upload report' : undefined}
+      title={collapsed ? label : undefined}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
@@ -52,24 +53,28 @@ function UploadNavBtn({ onClick, collapsed }) {
       }}
     >
       <Icon name="upload-cloud" size={15} style={{ color: hov ? DL_COLORS.accent : DL_COLORS.fgMuted, flexShrink: 0 }} />
-      {!collapsed && 'Upload report'}
+      {!collapsed && label}
     </div>
   );
 }
 
 export default function AppShell({ currentView, onNavigate, onLogout, children }) {
+  const { t } = useLang();
   const [collapsed, setCollapsed] = useState(true);
 
   const navItems = [
-    { id: 'dashboard', icon: 'activity',      label: 'Dashboard' },
-    { id: 'reports',   icon: 'file-text',      label: 'My reports' },
-    { id: 'trends',    icon: 'trending-up',    label: 'Trends' },
-    { id: 'ask',       icon: 'message-circle', label: 'Ask DiagnoLens' },
+    { id: 'dashboard', icon: 'activity',      label: t('nav.dashboard') },
+    { id: 'reports',   icon: 'file-text',      label: t('nav.reports') },
+    { id: 'trends',    icon: 'trending-up',    label: t('nav.trends') },
+    { id: 'ask',       icon: 'message-circle', label: t('nav.ask') },
   ];
 
   const titleMap = {
-    dashboard: 'Dashboard', reports: 'My reports',
-    trends: 'Trends', ask: 'Ask DiagnoLens', detail: 'Biomarker detail',
+    dashboard: t('nav.dashboard'),
+    reports:   t('nav.reports'),
+    trends:    t('nav.trends'),
+    ask:       t('nav.ask'),
+    detail:    t('nav.detail'),
   };
 
   const sidebarW = collapsed ? 56 : 220;
@@ -77,7 +82,7 @@ export default function AppShell({ currentView, onNavigate, onLogout, children }
   return (
     <div style={{
       display: 'flex', height: 'calc(var(--vh, 1vh) * 100)', overflow: 'hidden',
-      background: DL_COLORS.bgBase, fontFamily: "'DM Sans', sans-serif",
+      background: DL_COLORS.bgBase,
     }}>
       {/* Sidebar */}
       <div style={{
@@ -122,8 +127,15 @@ export default function AppShell({ currentView, onNavigate, onLogout, children }
 
         {/* Upload button */}
         <div style={{ padding: collapsed ? '12px 0' : '12px 2px' }}>
-          <UploadNavBtn onClick={() => onNavigate('upload')} collapsed={collapsed} />
+          <UploadNavBtn label={t('nav.upload')} onClick={() => onNavigate('upload')} collapsed={collapsed} />
         </div>
+
+        {/* Language switcher (expanded only) */}
+        {!collapsed && (
+          <div style={{ padding: '0 2px 10px', display: 'flex', justifyContent: 'center' }}>
+            <LanguageSwitcher />
+          </div>
+        )}
 
         {/* Profile row */}
         <div style={{
@@ -143,11 +155,11 @@ export default function AppShell({ currentView, onNavigate, onLogout, children }
             <>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 12, fontWeight: 500, color: DL_COLORS.fgPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Jane Doe</div>
-                <div style={{ fontSize: 10, color: DL_COLORS.fgMuted }}>3 reports</div>
+                <div style={{ fontSize: 10, color: DL_COLORS.fgMuted }}>{t('nav.reportsCount', { n: 3 })}</div>
               </div>
               <button
                 onClick={onLogout}
-                title="Sign out"
+                title={t('nav.signOut')}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer', padding: 2,
                   color: DL_COLORS.fgMuted, display: 'flex', alignItems: 'center', flexShrink: 0,
@@ -174,7 +186,7 @@ export default function AppShell({ currentView, onNavigate, onLogout, children }
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button
               onClick={() => setCollapsed(c => !c)}
-              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              title={collapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer', padding: 6,
                 borderRadius: 7, color: DL_COLORS.fgMuted,
@@ -197,7 +209,7 @@ export default function AppShell({ currentView, onNavigate, onLogout, children }
               padding: '6px 12px', border: `1px solid ${DL_COLORS.border}`, cursor: 'text',
             }}>
               <Icon name="search" size={13} style={{ color: DL_COLORS.fgMuted }} />
-              <span style={{ fontSize: 12, color: DL_COLORS.fgMuted }}>Search biomarkers…</span>
+              <span style={{ fontSize: 12, color: DL_COLORS.fgMuted }}>{t('nav.searchPlaceholder')}</span>
             </div>
             <div style={{
               display: 'flex', alignItems: 'center', padding: '5px 10px',

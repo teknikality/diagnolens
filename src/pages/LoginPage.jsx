@@ -4,10 +4,12 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { DL_COLORS } from '../tokens.js';
 import DLLogo from '../components/DLLogo.jsx';
 import Icon from '../components/Icon.jsx';
+import { useLang, LanguageSwitcher } from '../i18n/LangContext.jsx';
 
 const ACCESS_CODE = import.meta.env.VITE_ACCESS_CODE;
 
 export default function LoginPage() {
+  const { t } = useLang();
   const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,7 +27,7 @@ export default function LoginPage() {
     if (!code.trim()) return;
 
     if (!ACCESS_CODE) {
-      setError('App is not configured — set VITE_ACCESS_CODE in .env');
+      setError(t('login.errorConfig'));
       return;
     }
 
@@ -38,7 +40,7 @@ export default function LoginPage() {
         login(token, null);
         navigate(from, { replace: true });
       } else {
-        setError('Incorrect access code. Try again.');
+        setError(t('login.errorWrong'));
         setLoading(false);
       }
     }, 400);
@@ -48,16 +50,18 @@ export default function LoginPage() {
     <div style={{
       minHeight: 'calc(var(--vh, 1vh) * 100)',
       background: DL_COLORS.bgBase,
-      fontFamily: "'DM Sans', sans-serif",
       color: DL_COLORS.fgPrimary,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px 20px',
     }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center', marginBottom: 40 }}>
-          <DLLogo size={30} />
-          <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em' }}>DiagnoLens</span>
+        {/* Logo + lang switcher */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 40, gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <DLLogo size={30} />
+            <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em' }}>DiagnoLens</span>
+          </div>
+          <LanguageSwitcher />
         </div>
 
         {/* Card */}
@@ -68,20 +72,19 @@ export default function LoginPage() {
           boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
         }}>
           <h1 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 6 }}>
-            Enter access code
+            {t('login.title')}
           </h1>
           <p style={{ fontSize: 13, color: DL_COLORS.fgMuted, marginBottom: 24, lineHeight: 1.5 }}>
-            This app is invite-only. Enter your access code to continue.
+            {t('login.sub')}
           </p>
 
           <form onSubmit={handleSubmit}>
-            {/* Input */}
             <div style={{ position: 'relative', marginBottom: 16 }}>
               <input
                 type={visible ? 'text' : 'password'}
                 value={code}
                 onChange={e => { setCode(e.target.value); setError(''); }}
-                placeholder="Access code"
+                placeholder={t('login.placeholder')}
                 autoFocus
                 autoComplete="current-password"
                 style={{
@@ -90,7 +93,6 @@ export default function LoginPage() {
                   border: `1px solid ${error ? DL_COLORS.warning : DL_COLORS.border}`,
                   borderRadius: 10, padding: '12px 44px 12px 14px',
                   color: DL_COLORS.fgPrimary, fontSize: 15,
-                  fontFamily: "'DM Sans', sans-serif",
                   outline: 'none', transition: 'border-color 150ms',
                 }}
                 onFocus={e => { if (!error) e.target.style.borderColor = DL_COLORS.accentBorder; }}
@@ -109,7 +111,6 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Error */}
             {error && (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
@@ -122,7 +123,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={!code.trim() || loading}
@@ -132,20 +132,20 @@ export default function LoginPage() {
                 color: code.trim() && !loading ? '#0a1a16' : DL_COLORS.fgMuted,
                 border: 'none', borderRadius: 10, padding: '13px',
                 fontSize: 15, fontWeight: 600, cursor: code.trim() ? 'pointer' : 'not-allowed',
-                fontFamily: "'DM Sans', sans-serif", transition: 'all 200ms',
+                transition: 'all 200ms',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
               {loading
-                ? <><Icon name="loader" size={16} />Checking…</>
-                : <><Icon name="arrow-right" size={16} />Access DiagnoLens</>
+                ? <><Icon name="loader" size={16} />{t('login.checking')}</>
+                : <><Icon name="arrow-right" size={16} />{t('login.submit')}</>
               }
             </button>
           </form>
         </div>
 
         <p style={{ textAlign: 'center', fontSize: 12, color: DL_COLORS.fgMuted, marginTop: 20 }}>
-          Don't have a code? Contact your administrator.
+          {t('login.noCode')}
         </p>
       </div>
     </div>
