@@ -57,7 +57,7 @@ function UploadNavBtn({ onClick, collapsed }) {
   );
 }
 
-export default function AppShell({ currentView, onNavigate, children }) {
+export default function AppShell({ currentView, onNavigate, onLogout, children }) {
   const [collapsed, setCollapsed] = useState(true);
 
   const navItems = [
@@ -145,7 +145,19 @@ export default function AppShell({ currentView, onNavigate, children }) {
                 <div style={{ fontSize: 12, fontWeight: 500, color: DL_COLORS.fgPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Jane Doe</div>
                 <div style={{ fontSize: 10, color: DL_COLORS.fgMuted }}>3 reports</div>
               </div>
-              <Icon name="settings" size={14} style={{ color: DL_COLORS.fgMuted, cursor: 'pointer', flexShrink: 0 }} />
+              <button
+                onClick={onLogout}
+                title="Sign out"
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 2,
+                  color: DL_COLORS.fgMuted, display: 'flex', alignItems: 'center', flexShrink: 0,
+                  transition: 'color 150ms',
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = DL_COLORS.warning}
+                onMouseLeave={e => e.currentTarget.style.color = DL_COLORS.fgMuted}
+              >
+                <Icon name="log-out" size={14} />
+              </button>
             </>
           )}
         </div>

@@ -1,71 +1,46 @@
-import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 import LandingPage from './components/LandingPage.jsx';
-import AppShell from './components/AppShell.jsx';
-import DashboardView from './components/DashboardView.jsx';
-import DetailView from './components/DetailView.jsx';
-import ReportsView from './components/ReportsView.jsx';
-import TrendsView from './components/TrendsView.jsx';
-import AskView from './components/AskView.jsx';
-import OnboardingFlow from './components/onboarding/OnboardingFlow.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import AppLayout from './pages/AppLayout.jsx';
+import UploadPage from './pages/UploadPage.jsx';
+import DashboardPage from './pages/DashboardPage.jsx';
+import DetailPage from './pages/DetailPage.jsx';
+import ReportsPage from './pages/ReportsPage.jsx';
+import TrendsPage from './pages/TrendsPage.jsx';
+import AskPage from './pages/AskPage.jsx';
+import { useNavigate } from 'react-router-dom';
 
-const STORAGE_KEY   = 'diagnolens_v2_state';
-const SS_REPORT_KEY = 'dl_report';
-
-function ssReadReport()  { try { return JSON.parse(sessionStorage.getItem(SS_REPORT_KEY) || 'null'); } catch { return null; } }
-function ssWriteReport(d){ try { sessionStorage.setItem(SS_REPORT_KEY, JSON.stringify(d)); } catch {} }
+function Landing() {
+  const navigate = useNavigate();
+  return <LandingPage onGetStarted={() => navigate('/upload')} />;
+}
 
 export default function App() {
-  const saved = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; } })();
-
-  const [screen, setScreen]                   = useState(saved.screen || 'landing');
-  const [appView, setAppView]                 = useState(saved.appView || 'dashboard');
-  const [selectedBiomarker, setSelectedBiomarker] = useState(null);
-  const [reportData, setReportData]           = useState(() => ssReadReport());
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ screen, appView }));
-  }, [screen, appView]);
-
-  const goToApp = () => setScreen('onboarding');
-
-  const onOnboardingComplete = (data) => {
-    if (data) { setReportData(data); ssWriteReport(data); }
-    setScreen('app');
-    setAppView('dashboard');
-  };
-
-  const handleNavNavigate = (v) => {
-    if (v === 'upload') { setScreen('onboarding'); return; }
-    setAppView(v);
-    setSelectedBiomarker(null);
-  };
-
-  const handleSelectBiomarker = (b) => { setSelectedBiomarker(b); setAppView('detail'); };
-  const handleBack = () => { setSelectedBiomarker(null); setAppView('dashboard'); };
-
-  const renderAppContent = () => {
-    if (appView === 'detail' && selectedBiomarker)
-      return <DetailView biomarker={selectedBiomarker} onBack={handleBack} />;
-    if (appView === 'reports')
-      return <ReportsView reportData={reportData} onSelect={handleSelectBiomarker} />;
-    if (appView === 'trends')
-      return <TrendsView reportData={reportData} onSelect={handleSelectBiomarker} />;
-    if (appView === 'ask')
-      return <AskView reportData={reportData} />;
-    return <DashboardView reportData={reportData} onSelectBiomarker={handleSelectBiomarker} />;
-  };
-
-  if (screen === 'landing')
-    return <div className="screen-enter"><LandingPage onGetStarted={goToApp} /></div>;
-
-  if (screen === 'onboarding')
-    return <div className="screen-enter"><OnboardingFlow onComplete={onOnboardingComplete} /></div>;
-
   return (
-    <div className="screen-enter">
-      <AppShell currentView={appView} onNavigate={handleNavNavigate}>
-        {renderAppContent()}
-      </AppShell>
-    </div>
+    <Routes>
+      {/* Public */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<LoginPage />} />
+
+      {/* Protected — upload (outside AppShell) */}
+      <Route path="/upload" element={
+        <ProtectedRoute><UploadPage /></ProtectedRoute>
+      } />
+
+      {/* Protected — inside AppShell */}
+      <Route element={
+        <ProtectedRoute><AppLayout /></ProtectedRoute>
+      }>
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/detail"    element={<DetailPage />} />
+        <Route path="/reports"   element={<ReportsPage />} />
+        <Route path="/trends"    element={<TrendsPage />} />
+        <Route path="/ask"       element={<AskPage />} />
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
