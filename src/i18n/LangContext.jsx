@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import en from './en.js';
 import hi from './hi.js';
 import kn from './kn.js';
@@ -34,24 +34,26 @@ export function LangProvider({ children }) {
     return resolved;
   });
 
-  const setLang = (l) => {
+  const setLang = useCallback((l) => {
     if (!LANGS[l]) return;
     try { localStorage.setItem(LS_KEY, l); } catch {}
     applyFont(l);
     setLangState(l);
-  };
+  }, []);
 
-  const t = (key, vars) => {
+  const t = useCallback((key, vars) => {
     const strings = LANGS[lang] || en;
     let val = getDeep(strings, key);
     if (val === undefined) val = getDeep(en, key);
     if (val === undefined) return key;
     if (typeof val !== 'string') return val;
     return interpolate(val, vars);
-  };
+  }, [lang]);
+
+  const value = useMemo(() => ({ t, lang, setLang }), [t, lang, setLang]);
 
   return (
-    <LangContext.Provider value={{ t, lang, setLang }}>
+    <LangContext.Provider value={value}>
       {children}
     </LangContext.Provider>
   );

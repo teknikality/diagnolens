@@ -12,7 +12,7 @@ function SummaryHeader({ summary, biomarkers, fileName, t }) {
   const counts = { normal: 0, caution: 0, warning: 0 };
   (biomarkers || []).forEach(b => { if (counts[b.status] !== undefined) counts[b.status]++; });
 
-  const explanation = summary?.explanation || '';
+  const explanation = summary?.safety_note || '';
   const keyFindings = summary?.key_findings || [];
 
   return (
@@ -333,7 +333,7 @@ export default function DashboardView({ reportData, onSelectBiomarker }) {
     : t('dashboard.biomarkerCountPlural', { n: bCount });
 
   return (
-    <div style={{ maxWidth: 820 }}>
+    <div style={{ width: '100%' }}>
       <SummaryHeader summary={summary} biomarkers={biomarkers} fileName={fileName} t={t} />
       <TopConcerns biomarkers={biomarkers} onAction={openModal} t={t} />
 

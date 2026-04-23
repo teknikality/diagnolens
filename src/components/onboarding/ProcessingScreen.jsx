@@ -24,7 +24,7 @@ const ERROR_META = {
 const STEP_ICONS = ['scan-text', 'flask-conical', 'sparkles'];
 
 export default function ProcessingScreen({ file, answers, onComplete, onRetry }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   const [activeStep, setActiveStep]    = useState(0);
   const [completedSteps, setCompleted] = useState([]);
@@ -68,6 +68,7 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
       if (answers.diet)               body.append('diet',           answers.diet);
       if (answers.activity)           body.append('activity',       answers.activity);
       if (answers.work)               body.append('work',           answers.work);
+      body.append('language', lang);
 
       let status = null;
       try {
