@@ -51,8 +51,16 @@ export default function LandingPage({ onGetStarted }) {
         justifyContent: 'center', textAlign: 'center',
         padding: '56px 24px 48px', maxWidth: 540, margin: '0 auto', width: '100%',
       }}>
+        {/* Brand mark */}
+        <div style={{ ...fadeUp(0), display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 32 }}>
+          <DLLogo size={96} />
+          <span style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: DL_COLORS.fgPrimary }}>
+            DiagnoLens
+          </span>
+        </div>
+
         <div style={{
-          ...fadeUp(0),
+          ...fadeUp(60),
           display: 'inline-flex', alignItems: 'center', gap: 7,
           background: DL_COLORS.accentDim, border: `1px solid ${DL_COLORS.accentBorder}`,
           borderRadius: 100, padding: '5px 13px', marginBottom: 24,
@@ -62,7 +70,7 @@ export default function LandingPage({ onGetStarted }) {
         </div>
 
         <h1 style={{
-          ...fadeUp(80),
+          ...fadeUp(140),
           fontSize: 'clamp(32px, 8vw, 52px)',
           fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1,
           margin: '0 0 16px',
@@ -72,14 +80,14 @@ export default function LandingPage({ onGetStarted }) {
         </h1>
 
         <p style={{
-          ...fadeUp(140),
+          ...fadeUp(200),
           fontSize: 16, color: DL_COLORS.fgSecondary, lineHeight: 1.65,
           margin: '0 0 36px', maxWidth: 400,
         }}>
           {t('landing.heroSub')}
         </p>
 
-        <div style={{ ...fadeUp(200), width: '100%', maxWidth: 340 }}>
+        <div style={{ ...fadeUp(260), width: '100%', maxWidth: 340 }}>
           <button
             onClick={onGetStarted}
             style={{
