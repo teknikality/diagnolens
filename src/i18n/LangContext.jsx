@@ -2,13 +2,17 @@ import { createContext, useContext, useState, useCallback, useMemo } from 'react
 import en from './en.js';
 import hi from './hi.js';
 import kn from './kn.js';
+import te from './te.js';
+import ta from './ta.js';
 
-const LANGS = { en, hi, kn };
+const LANGS = { en, hi, kn, te, ta };
 const LS_KEY = 'dl_lang';
 const FONT_MAP = {
   en: "'DM Sans', system-ui, sans-serif",
   hi: "'Noto Sans Devanagari', 'DM Sans', system-ui, sans-serif",
   kn: "'Noto Sans Kannada', 'DM Sans', system-ui, sans-serif",
+  te: "'Noto Sans Telugu', 'DM Sans', system-ui, sans-serif",
+  ta: "'Noto Sans Tamil', 'DM Sans', system-ui, sans-serif",
 };
 
 function getDeep(obj, path) {
@@ -67,6 +71,8 @@ export function LanguageSwitcher({ style }) {
     { id: 'en', label: 'EN' },
     { id: 'hi', label: 'हि' },
     { id: 'kn', label: 'ಕ' },
+    { id: 'te', label: 'తె' },
+    { id: 'ta', label: 'த' },
   ];
   return (
     <div style={{
@@ -86,6 +92,8 @@ export function LanguageSwitcher({ style }) {
             padding: '5px 10px', cursor: 'pointer',
             fontFamily: opt.id === 'hi' ? "'Noto Sans Devanagari', sans-serif"
                       : opt.id === 'kn' ? "'Noto Sans Kannada', sans-serif"
+                      : opt.id === 'te' ? "'Noto Sans Telugu', sans-serif"
+                      : opt.id === 'ta' ? "'Noto Sans Tamil', sans-serif"
                       : "'DM Sans', sans-serif",
             transition: 'all 150ms',
           }}
