@@ -17,7 +17,7 @@ export function normaliseBiomarker(b) {
     reference_range: b.reference_range  || '',
     status:          mapApiStatus(b.status),
     apiStatus:       (b.status          || '').toUpperCase(),
-    category:        b.category         || 'General',
+    category:        b.category         || '',
     is_abnormal:     !!b.is_abnormal,
     insight: {
       meaning: b.insight?.meaning || '',

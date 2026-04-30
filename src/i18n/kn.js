@@ -289,4 +289,19 @@ export default {
     warning: 'ಎಚ್ಚರಿಕೆ',
     info: 'ಅಜ್ಞಾತ',
   },
+
+  detail: {
+    backLink: 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಹಿಂತಿರುಗಿ',
+    referenceRange: 'ಉಲ್ಲೇಖ ವ್ಯಾಪ್ತಿ',
+    status: 'ಸ್ಥಿತಿ',
+    meaning: 'ಇದರ ಅರ್ಥವೇನು',
+    actions: 'ನೀವು ಏನು ಮಾಡಬಹುದು',
+    askQuestion: 'ಈ ಫಲಿತಾಂಶದ ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳಿವೆಯೇ?',
+    askDescription: 'DiagnoLens ಅನ್ನು ಸರಳ ಭಾಷೆಯಲ್ಲಿ ವಿವರಣೆಗಾಗಿ ಕೇಳಿ.',
+    askButton: '{name} ಬಗ್ಗೆ ಕೇಳಿ',
+  },
+
+  common: {
+    defaultCategory: 'ಸಾಮಾನ್ಯ',
+  },
 };

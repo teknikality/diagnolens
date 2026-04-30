@@ -289,4 +289,19 @@ export default {
     warning: 'चेतावनी',
     info: 'अज्ञात',
   },
+
+  detail: {
+    backLink: 'डैशबोर्ड पर वापस',
+    referenceRange: 'संदर्भ सीमा',
+    status: 'स्थिति',
+    meaning: 'इसका क्या मतलब है',
+    actions: 'आप क्या कर सकते हैं',
+    askQuestion: 'इस परिणाम के बारे में प्रश्न हैं?',
+    askDescription: 'DiagnoLens से सरल भाषा में स्पष्टीकरण मांगें।',
+    askButton: '{name} के बारे में पूछें',
+  },
+
+  common: {
+    defaultCategory: 'सामान्य',
+  },
 };

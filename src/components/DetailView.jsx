@@ -6,8 +6,10 @@ import Card from './Card.jsx';
 import Button from './Button.jsx';
 import SectionLabel from './SectionLabel.jsx';
 import ValueDisplay from './ValueDisplay.jsx';
+import { useLang } from '../i18n/LangContext.jsx';
 
 export default function DetailView({ biomarker, onBack }) {
+  const { t } = useLang();
   const [entered, setEntered] = useState(false);
   useEffect(() => { setTimeout(() => setEntered(true), 30); }, []);
 
@@ -34,7 +36,7 @@ export default function DetailView({ biomarker, onBack }) {
         onMouseLeave={e => e.currentTarget.style.color = DL_COLORS.fgMuted}
       >
         <Icon name="chevron-left" size={16} />
-        Back to dashboard
+        {t('detail.backLink')}
       </div>
 
       {/* Header card */}
@@ -54,13 +56,13 @@ export default function DetailView({ biomarker, onBack }) {
         {biomarker.reference_range && (
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
             <div>
-              <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 3 }}>Reference range</div>
+              <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 3 }}>{t('detail.referenceRange')}</div>
               <div style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: DL_COLORS.fgSecondary }}>
                 {biomarker.reference_range}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 3 }}>Status</div>
+              <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 3 }}>{t('detail.status')}</div>
               <div style={{ fontSize: 13, color: meta.color, fontWeight: 500 }}>{meta.label}</div>
             </div>
           </div>
@@ -74,7 +76,7 @@ export default function DetailView({ biomarker, onBack }) {
           borderRadius: 12, padding: '18px 20px', marginBottom: 12,
         }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: DL_COLORS.accent, marginBottom: 8 }}>
-            What this means
+            {t('detail.meaning')}
           </div>
           <p style={{ fontSize: 13, color: DL_COLORS.fgSecondary, lineHeight: 1.7, margin: 0 }}>
             {biomarker.insight.meaning}
@@ -85,7 +87,7 @@ export default function DetailView({ biomarker, onBack }) {
       {/* Advice list */}
       {biomarker.insight?.advice?.length > 0 && (
         <Card style={{ marginBottom: 12, padding: '20px 22px' }}>
-          <SectionLabel>What you can do</SectionLabel>
+          <SectionLabel>{t('detail.actions')}</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
             {biomarker.insight.advice.map((item, i) => (
               <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -110,12 +112,12 @@ export default function DetailView({ biomarker, onBack }) {
         borderRadius: 12, padding: '14px 18px',
       }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 2 }}>Have questions about this result?</div>
-          <div style={{ fontSize: 12, color: DL_COLORS.fgMuted }}>Ask DiagnoLens for a plain-language explanation.</div>
+          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 2 }}>{t('detail.askQuestion')}</div>
+          <div style={{ fontSize: 12, color: DL_COLORS.fgMuted }}>{t('detail.askDescription')}</div>
         </div>
         <Button variant="secondary" size="sm">
           <Icon name="message-circle" size={13} />
-          Ask about {biomarker.name}
+          {t('detail.askButton', { name: biomarker.name })}
         </Button>
       </div>
     </div>

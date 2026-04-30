@@ -44,7 +44,7 @@ function SectionContent({ section, biomarker, t }) {
         </div>
         <div style={{ background: DL_COLORS.bgRaised, borderRadius: 10, padding: 16, border: `1px solid ${DL_COLORS.border}` }}>
           <div style={{ fontSize: 11, color: DL_COLORS.fgMuted, marginBottom: 4 }}>{t('modal.category')}</div>
-          <div style={{ fontSize: 14, color: DL_COLORS.fgPrimary }}>{biomarker.category || 'General'}</div>
+          <div style={{ fontSize: 14, color: DL_COLORS.fgPrimary }}>{biomarker.category || t('common.defaultCategory')}</div>
         </div>
       </div>
     );

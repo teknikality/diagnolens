@@ -289,4 +289,19 @@ export default {
     warning: 'Elevated',
     info: 'Unknown',
   },
+
+  detail: {
+    backLink: 'Back to dashboard',
+    referenceRange: 'Reference range',
+    status: 'Status',
+    meaning: 'What this means',
+    actions: 'What you can do',
+    askQuestion: 'Have questions about this result?',
+    askDescription: 'Ask DiagnoLens for a plain-language explanation.',
+    askButton: 'Ask about {name}',
+  },
+
+  common: {
+    defaultCategory: 'General',
+  },
 };
