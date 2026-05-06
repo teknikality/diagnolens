@@ -8,6 +8,7 @@ import { supabase } from './supabase.js';
 import { API_BASE } from '../config.js';
 
 async function getToken() {
+  if (!supabase) return null;
   const { data } = await supabase.auth.getSession();
   return data?.session?.access_token ?? null;
 }
