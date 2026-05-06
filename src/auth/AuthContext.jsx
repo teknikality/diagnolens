@@ -1,33 +1,58 @@
-import { createContext, useContext, useState } from 'react';
-
-const STORAGE_KEY = 'dl_auth';
-
-function readStorage() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch { return null; }
-}
+import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase.js';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [state, setState] = useState(() => readStorage() || { token: null, user: null });
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const isAuthenticated = !!state.token;
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setLoading(false);
+    });
 
-  const login = (token, user = null) => {
-    const next = { token, user };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    setState(next);
+    // Listen for auth state changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const sendOTP = async (phone) => {
+    const { error } = await supabase.auth.signInWithOtp({ phone });
+    if (error) throw error;
   };
 
-  const logout = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setState({ token: null, user: null });
+  const verifyOTP = async (phone, token) => {
+    const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
+    if (error) throw error;
+    return data;
   };
 
-  const getToken = () => state.token;
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+  };
+
+  const isAuthenticated = !!session;
+  const user = session?.user ?? null;
+  const getToken = () => session?.access_token ?? null;
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user: state.user, token: state.token, login, logout, getToken }}>
+    <AuthContext.Provider value={{
+      isAuthenticated,
+      user,
+      session,
+      loading,
+      sendOTP,
+      verifyOTP,
+      logout,
+      getToken,
+    }}>
       {children}
     </AuthContext.Provider>
   );

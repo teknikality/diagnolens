@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext.jsx';
+import { FamilyProvider } from './family/FamilyContext.jsx';
 import { ReportProvider } from './report/ReportContext.jsx';
 import { LangProvider } from './i18n/LangContext.jsx';
 import App from './App.jsx';
@@ -12,9 +13,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <LangProvider>
         <AuthProvider>
-          <ReportProvider>
-            <App />
-          </ReportProvider>
+          <FamilyProvider>
+            <ReportProvider>
+              <App />
+            </ReportProvider>
+          </FamilyProvider>
         </AuthProvider>
       </LangProvider>
     </BrowserRouter>

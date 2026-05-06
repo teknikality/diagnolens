@@ -28,18 +28,24 @@ export default {
   },
 
   login: {
-    title: 'Enter access code',
-    sub: 'This app is invite-only. Enter your access code to continue.',
-    placeholder: 'Access code',
-    checking: 'Checking…',
-    submit: 'Access DiagnoLens',
-    errorWrong: 'Incorrect access code. Try again.',
-    errorConfig: 'App is not configured — set VITE_ACCESS_CODE in .env',
-    noCode: "Don't have a code? Contact your administrator.",
+    phoneTitle: 'Sign in with your phone',
+    phoneSub: "We'll send a 6-digit code to verify your number.",
+    phoneLabel: 'Phone number',
+    sendOtp: 'Send OTP',
+    sending: 'Sending...',
+    otpTitle: 'Enter verification code',
+    otpSub: 'Code sent to your phone',
+    otpLabel: 'Verification code',
+    verifyOtp: 'Verify',
+    verifying: 'Verifying...',
+    changePhone: 'Use a different number',
+    errorSend: 'Failed to send code. Check your number and try again.',
+    errorOtp: 'Invalid code. Try again.',
   },
 
   nav: {
     dashboard: 'Dashboard',
+    family: 'Family',
     reports: 'My reports',
     trends: 'Trends',
     ask: 'Ask DiagnoLens',
@@ -299,6 +305,30 @@ export default {
     askQuestion: 'Have questions about this result?',
     askDescription: 'Ask DiagnoLens for a plain-language explanation.',
     askButton: 'Ask about {name}',
+  },
+
+  family: {
+    title: 'Your Family',
+    addMember: 'Add family member',
+    selfLabel: 'Self',
+    setup: {
+      title: "Let's set up your profile",
+      selfSub: 'This helps us personalize your report analysis.',
+      name: 'Your name',
+      age: 'Age',
+      gender: 'Gender',
+      continue: 'Continue',
+      addTitle: 'Add family members',
+      addSub: 'Track health reports for your family. You can always add more later.',
+      skipAndUpload: "Done — upload a report",
+    },
+    relationships: { self: 'Self', spouse: 'Spouse', child: 'Child', parent: 'Parent', other: 'Other' },
+    ageGroups: { child: 'Child', adult: 'Adult', senior: 'Senior' },
+  },
+
+  memberSwitcher: {
+    label: 'Viewing as',
+    switch: 'Switch member',
   },
 
   common: {

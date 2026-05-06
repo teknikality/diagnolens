@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DL_COLORS } from '../tokens.js';
 import Icon from './Icon.jsx';
 import DLLogo from './DLLogo.jsx';
+import MemberSwitcher from './MemberSwitcher.jsx';
 import { useLang, LanguageSwitcher } from '../i18n/LangContext.jsx';
 
 function SideNavItem({ icon, label, active, collapsed, onClick }) {
@@ -64,6 +65,7 @@ export default function AppShell({ currentView, onNavigate, onLogout, children }
 
   const navItems = [
     { id: 'dashboard', icon: 'activity',      label: t('nav.dashboard') },
+    { id: 'family',    icon: 'users',          label: t('nav.family') || 'Family' },
     { id: 'reports',   icon: 'file-text',      label: t('nav.reports') },
     { id: 'trends',    icon: 'trending-up',    label: t('nav.trends') },
     { id: 'ask',       icon: 'message-circle', label: t('nav.ask') },
@@ -71,6 +73,7 @@ export default function AppShell({ currentView, onNavigate, onLogout, children }
 
   const titleMap = {
     dashboard: t('nav.dashboard'),
+    family:    t('nav.family') || 'Family',
     reports:   t('nav.reports'),
     trends:    t('nav.trends'),
     ask:       t('nav.ask'),
@@ -137,40 +140,29 @@ export default function AppShell({ currentView, onNavigate, onLogout, children }
           </div>
         )}
 
-        {/* Profile row */}
+        {/* Member switcher + logout */}
         <div style={{
           borderTop: `1px solid ${DL_COLORS.border}`,
-          padding: collapsed ? '12px 0' : '12px 4px',
-          display: 'flex', alignItems: 'center',
-          justifyContent: collapsed ? 'center' : 'flex-start',
-          gap: collapsed ? 0 : 10, overflow: 'hidden',
+          padding: collapsed ? '10px 2px' : '10px 4px',
         }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: '50%',
-            background: DL_COLORS.accentDim, border: `1px solid ${DL_COLORS.accentBorder}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: DL_COLORS.accent, fontSize: 11, fontWeight: 600, flexShrink: 0,
-          }}>JD</div>
+          <MemberSwitcher collapsed={collapsed} />
           {!collapsed && (
-            <>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: DL_COLORS.fgPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Jane Doe</div>
-                <div style={{ fontSize: 10, color: DL_COLORS.fgMuted }}>{t('nav.reportsCount', { n: 3 })}</div>
-              </div>
-              <button
-                onClick={onLogout}
-                title={t('nav.signOut')}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer', padding: 2,
-                  color: DL_COLORS.fgMuted, display: 'flex', alignItems: 'center', flexShrink: 0,
-                  transition: 'color 150ms',
-                }}
-                onMouseEnter={e => e.currentTarget.style.color = DL_COLORS.warning}
-                onMouseLeave={e => e.currentTarget.style.color = DL_COLORS.fgMuted}
-              >
-                <Icon name="log-out" size={14} />
-              </button>
-            </>
+            <button
+              onClick={onLogout}
+              title={t('nav.signOut')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                width: '100%', marginTop: 8, padding: '8px 12px',
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: DL_COLORS.fgMuted, fontSize: 12,
+                transition: 'color 150ms',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = DL_COLORS.warning}
+              onMouseLeave={e => e.currentTarget.style.color = DL_COLORS.fgMuted}
+            >
+              <Icon name="log-out" size={14} />
+              {t('nav.signOut')}
+            </button>
           )}
         </div>
       </div>
