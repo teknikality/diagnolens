@@ -28,7 +28,7 @@ export default function MemberCard({ member, onClick }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
         <div style={{
           width: 40, height: 40, borderRadius: '50%',
-          background: DL_COLORS.accentMuted,
+          background: DL_COLORS.accentDim,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 14, fontWeight: 600, color: DL_COLORS.accent,
         }}>

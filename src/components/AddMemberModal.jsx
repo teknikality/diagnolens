@@ -94,7 +94,7 @@ export default function AddMemberModal({ onClose }) {
               <button key={g.id} onClick={() => setGender(g.id)} style={{
                 flex: 1, padding: '10px', borderRadius: 8,
                 border: `1px solid ${gender === g.id ? DL_COLORS.accent : DL_COLORS.border}`,
-                background: gender === g.id ? DL_COLORS.accentMuted : DL_COLORS.bgRaised,
+                background: gender === g.id ? DL_COLORS.accentDim : DL_COLORS.bgRaised,
                 color: DL_COLORS.fgPrimary, fontSize: 13, cursor: 'pointer',
               }}>{g.label}</button>
             ))}

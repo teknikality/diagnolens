@@ -34,7 +34,7 @@ export default function MemberSwitcher({ collapsed }) {
       >
         <div style={{
           width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-          background: DL_COLORS.accentMuted,
+          background: DL_COLORS.accentDim,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 12, fontWeight: 600, color: DL_COLORS.accent,
         }}>
@@ -78,7 +78,7 @@ export default function MemberSwitcher({ collapsed }) {
             >
               <div style={{
                 width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                background: DL_COLORS.accentMuted,
+                background: DL_COLORS.accentDim,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 11, fontWeight: 600, color: DL_COLORS.accent,
               }}>

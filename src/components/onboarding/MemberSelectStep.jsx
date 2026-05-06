@@ -46,7 +46,7 @@ export default function MemberSelectStep({ members, activeMember, onSelect }) {
               >
                 <div style={{
                   width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                  background: DL_COLORS.accentMuted,
+                  background: DL_COLORS.accentDim,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 14, fontWeight: 600, color: DL_COLORS.accent,
                 }}>

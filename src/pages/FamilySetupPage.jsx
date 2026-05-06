@@ -158,7 +158,7 @@ export default function FamilySetupPage() {
                   {genderOptions.map(g => (
                     <button key={g.id} onClick={() => setSelfGender(g.id)} style={{
                       flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${selfGender === g.id ? DL_COLORS.accent : DL_COLORS.border}`,
-                      background: selfGender === g.id ? DL_COLORS.accentMuted : DL_COLORS.bgRaised,
+                      background: selfGender === g.id ? DL_COLORS.accentDim : DL_COLORS.bgRaised,
                       color: DL_COLORS.fgPrimary, fontSize: 13, cursor: 'pointer',
                     }}>{g.label}</button>
                   ))}
@@ -215,7 +215,7 @@ export default function FamilySetupPage() {
                   {genderOptions.map(g => (
                     <button key={g.id} onClick={() => setNewGender(g.id)} style={{
                       flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${newGender === g.id ? DL_COLORS.accent : DL_COLORS.border}`,
-                      background: newGender === g.id ? DL_COLORS.accentMuted : DL_COLORS.bgRaised,
+                      background: newGender === g.id ? DL_COLORS.accentDim : DL_COLORS.bgRaised,
                       color: DL_COLORS.fgPrimary, fontSize: 13, cursor: 'pointer',
                     }}>{g.label}</button>
                   ))}
