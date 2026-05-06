@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFamily } from '../family/FamilyContext.jsx';
 import { useAuth } from '../auth/AuthContext.jsx';
@@ -10,15 +10,16 @@ import { useLang } from '../i18n/LangContext.jsx';
 export default function FamilySetupPage() {
   const { t } = useLang();
   const { user } = useAuth();
-  const { members, updateMember, addMember } = useFamily();
+  const { members, loading, updateMember, addMember } = useFamily();
   const navigate = useNavigate();
 
   const selfMember = members.find(m => m.relationship === 'self');
 
-  const [step, setStep]         = useState('self'); // 'self' | 'add' | 'done'
-  const [selfName, setSelfName] = useState(selfMember?.name || '');
-  const [selfAge, setSelfAge]   = useState(selfMember?.age || '');
-  const [selfGender, setSelfGender] = useState(selfMember?.gender || '');
+  const [step, setStep]         = useState('self');
+  const [selfName, setSelfName] = useState('');
+  const [selfAge, setSelfAge]   = useState('');
+  const [selfGender, setSelfGender] = useState('');
+  const [initialized, setInitialized] = useState(false);
 
   const [newName, setNewName]     = useState('');
   const [newAge, setNewAge]       = useState('');
@@ -26,15 +27,40 @@ export default function FamilySetupPage() {
   const [newRel, setNewRel]       = useState('other');
   const [saving, setSaving]       = useState(false);
 
+  // Pre-fill self member data once members load
+  useEffect(() => {
+    if (!initialized && selfMember) {
+      setSelfName(selfMember.name === 'Self' ? '' : selfMember.name || '');
+      setSelfAge(selfMember.age || '');
+      setSelfGender(selfMember.gender || '');
+      setInitialized(true);
+    }
+  }, [selfMember, initialized]);
+
+  // Show loading while members are being fetched
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: 'calc(var(--vh, 1vh) * 100)',
+        background: DL_COLORS.bgBase, color: DL_COLORS.fgPrimary,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon name="loader" size={24} style={{ color: DL_COLORS.accent }} />
+      </div>
+    );
+  }
+
   const handleSaveSelf = async () => {
-    if (!selfMember || !selfName.trim() || !selfAge) return;
+    if (!selfName.trim() || !selfAge) return;
     setSaving(true);
     try {
-      await updateMember(selfMember.id, {
-        name: selfName.trim(),
-        age: parseInt(selfAge),
-        gender: selfGender || undefined,
-      });
+      if (selfMember) {
+        await updateMember(selfMember.id, {
+          name: selfName.trim(),
+          age: parseInt(selfAge),
+          gender: selfGender || undefined,
+        });
+      }
       setStep('add');
     } catch (err) {
       console.error(err);
@@ -124,7 +150,7 @@ export default function FamilySetupPage() {
               </div>
               <div style={{ marginBottom: 14 }}>
                 <label style={labelStyle}>{t('family.setup.age') || 'Age'}</label>
-                <input type="number" value={selfAge} onChange={e => setSelfAge(e.target.value)} placeholder="35" min="1" max="120" style={inputStyle} />
+                <input type="number" value={selfAge} onChange={e => setSelfAge(e.target.value)} placeholder="35" min="0" max="120" style={inputStyle} />
               </div>
               <div style={{ marginBottom: 20 }}>
                 <label style={labelStyle}>{t('family.setup.gender') || 'Gender'}</label>
@@ -156,7 +182,6 @@ export default function FamilySetupPage() {
                 {t('family.setup.addSub') || 'Track health reports for your family. You can always add more later.'}
               </p>
 
-              {/* Show existing non-self members */}
               {members.filter(m => m.relationship !== 'self').map(m => (
                 <div key={m.id} style={{
                   display: 'flex', alignItems: 'center', gap: 10,

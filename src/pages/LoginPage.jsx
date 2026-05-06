@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
-import { apiPost } from '../lib/api.js';
+import { apiPost, setApiPhone } from '../lib/api.js';
 import { DL_COLORS } from '../tokens.js';
 import DLLogo from '../components/DLLogo.jsx';
 import Icon from '../components/Icon.jsx';
@@ -12,41 +12,52 @@ export default function LoginPage() {
   const { isAuthenticated, loginWithPhone } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/dashboard';
 
-  const [phone, setPhone] = useState('+91');
-  const [error, setError] = useState('');
+  const [phone, setPhone]     = useState('+91');
+  const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
+  // Track whether we're mid-login to prevent the auto-redirect
+  const loggingIn = useRef(false);
 
-  if (isAuthenticated) return <Navigate to={from} replace />;
+  // Only auto-redirect if user was already authenticated on mount
+  // (not during the login flow — we handle navigation ourselves)
+  if (isAuthenticated && !loggingIn.current) {
+    const from = location.state?.from?.pathname || '/dashboard';
+    return <Navigate to={from} replace />;
+  }
 
   const isValid = phone.replace(/\D/g, '').length >= 10;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isValid) {
-      setError(t('login.errorPhone') || 'Enter a valid phone number');
-      return;
-    }
+    if (!isValid || loading) return;
+
     setLoading(true);
     setError('');
+    loggingIn.current = true;
 
-    // Set phone in auth context first (so API calls include X-Phone header)
-    loginWithPhone(phone.trim());
+    // Set the API phone header BEFORE the API call (synchronous)
+    setApiPhone(phone.trim());
 
     try {
       const result = await apiPost('/api/auth/phone-login', { phone: phone.trim() });
+
+      // NOW set auth state (this will trigger re-render, but we navigate first)
+      loginWithPhone(phone.trim());
+
       if (result.is_new_user) {
         navigate('/family-setup', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
       }
     } catch (err) {
-      // Backend might be unreachable — still let user in (pilot mode)
       console.warn('Backend login failed, proceeding offline:', err.message);
+      // Set auth state and go to family setup as fallback
+      loginWithPhone(phone.trim());
       navigate('/family-setup', { replace: true });
     } finally {
       setLoading(false);
+      loggingIn.current = false;
     }
   };
 

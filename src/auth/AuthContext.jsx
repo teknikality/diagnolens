@@ -14,6 +14,10 @@ export function AuthProvider({ children }) {
   const loginWithPhone = (p) => {
     setPhone(p);
     setApiPhone(p);
+    // Clear stale data from previous user
+    sessionStorage.clear();
+    localStorage.removeItem('dl_active_member');
+    localStorage.removeItem('dl_family_members');
   };
 
   const logout = () => {
