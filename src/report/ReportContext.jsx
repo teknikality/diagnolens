@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useRef, useEffect } from 'react';
 import { useFamily } from '../family/FamilyContext.jsx';
 
 const BIOMARKER_KEY = 'dl_selected_biomarker';
@@ -12,15 +12,16 @@ const ReportContext = createContext(null);
 export function ReportProvider({ children }) {
   const { activeMember } = useFamily();
   const memberId = activeMember?.id;
+  const prevMemberRef = useRef(memberId);
 
   const [reportData, setReportData]               = useState(() => ssRead(reportKey(memberId)));
   const [selectedBiomarker, setSelectedBiomarker] = useState(() => ssRead(BIOMARKER_KEY));
 
-  // When active member changes, load that member's report
+  // Only reload when member actually changes (not on every render)
   useEffect(() => {
-    const data = ssRead(reportKey(memberId));
-    setReportData(data);
-    // Clear selected biomarker when switching members
+    if (prevMemberRef.current === memberId) return;
+    prevMemberRef.current = memberId;
+    setReportData(ssRead(reportKey(memberId)));
     setSelectedBiomarker(null);
     ssWrite(BIOMARKER_KEY, null);
   }, [memberId]);

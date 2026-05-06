@@ -11,10 +11,11 @@ export default function MemberSwitcher({ collapsed }) {
   const ref = useRef(null);
 
   useEffect(() => {
+    if (!open) return;
     const handleClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+  }, [open]);
 
   if (!activeMember) return null;
 

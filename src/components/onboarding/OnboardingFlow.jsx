@@ -34,13 +34,15 @@ export default function OnboardingFlow({ onComplete }) {
   const [qStep, setQStep]          = useState(saved.qStep   || 0);
   const [retryKey, setRetryKey]     = useState(0);
 
-  // Skip member select if only 1 member
+  // Skip member select if only 1 member — run once when members load
+  const membersLen = members.length;
+  const activeMemberId = activeMember?.id;
   useEffect(() => {
-    if (phase === 'member-select' && members.length <= 1 && activeMember) {
+    if (phase === 'member-select' && membersLen <= 1 && activeMemberId) {
       setSelectedMember(activeMember);
       setPhase('upload');
     }
-  }, [phase, members, activeMember]);
+  }, [phase, membersLen, activeMemberId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hasProgress = !!saved.fileName && Object.keys(saved.answers || {}).length > 0;
 

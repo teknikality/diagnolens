@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 
@@ -18,30 +18,9 @@ export function FamilyProvider({ children }) {
   const [members, setMembers] = useState([]);
   const [activeMember, setActiveMemberState] = useState(null);
   const [loading, setLoading] = useState(true);
+  const fetchedRef = useRef(false);
 
-  const fetchMembers = useCallback(async () => {
-    if (!isAuthenticated) return;
-    setLoading(true);
-
-    try {
-      // Try backend API first
-      const data = await apiGet('/api/family/members');
-      const list = data.members || [];
-      setMembers(list);
-      writeCache(list);
-      _restoreActive(list);
-    } catch (err) {
-      console.warn('Backend fetch failed, using cache:', err.message);
-      // Fall back to localStorage cache
-      const cached = readCache();
-      setMembers(cached);
-      _restoreActive(cached);
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  function _restoreActive(list) {
+  const restoreActive = useCallback((list) => {
     const savedId = localStorage.getItem(ACTIVE_KEY);
     const saved = list.find(m => m.id === savedId);
     if (saved) {
@@ -50,12 +29,39 @@ export function FamilyProvider({ children }) {
       setActiveMemberState(list[0]);
       localStorage.setItem(ACTIVE_KEY, list[0].id);
     }
-  }
+  }, []);
 
+  const fetchMembers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await apiGet('/api/family/members');
+      const list = data.members || [];
+      setMembers(list);
+      writeCache(list);
+      restoreActive(list);
+    } catch (err) {
+      console.warn('Backend fetch failed, using cache:', err.message);
+      const cached = readCache();
+      setMembers(cached);
+      restoreActive(cached);
+    } finally {
+      setLoading(false);
+    }
+  }, [restoreActive]);
+
+  // Fetch once when authenticated — no fetchMembers in deps to avoid loops
   useEffect(() => {
-    if (isAuthenticated) fetchMembers();
-    else { setMembers([]); setActiveMemberState(null); setLoading(false); }
-  }, [isAuthenticated, fetchMembers]);
+    if (isAuthenticated && !fetchedRef.current) {
+      fetchedRef.current = true;
+      fetchMembers();
+    }
+    if (!isAuthenticated) {
+      fetchedRef.current = false;
+      setMembers([]);
+      setActiveMemberState(null);
+      setLoading(false);
+    }
+  }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const switchMember = (member) => {
     setActiveMemberState(member);
@@ -63,35 +69,20 @@ export function FamilyProvider({ children }) {
   };
 
   const addMember = async (data) => {
-    try {
-      const result = await apiPost('/api/family/members', data);
-      await fetchMembers();
-      return result;
-    } catch (err) {
-      console.error('Failed to add member:', err);
-      throw err;
-    }
+    const result = await apiPost('/api/family/members', data);
+    await fetchMembers();
+    return result;
   };
 
   const updateMember = async (id, data) => {
-    try {
-      const result = await apiPut(`/api/family/members/${id}`, data);
-      await fetchMembers();
-      return result;
-    } catch (err) {
-      console.error('Failed to update member:', err);
-      throw err;
-    }
+    const result = await apiPut(`/api/family/members/${id}`, data);
+    await fetchMembers();
+    return result;
   };
 
   const deleteMember = async (id) => {
-    try {
-      await apiDelete(`/api/family/members/${id}`);
-      await fetchMembers();
-    } catch (err) {
-      console.error('Failed to delete member:', err);
-      throw err;
-    }
+    await apiDelete(`/api/family/members/${id}`);
+    await fetchMembers();
   };
 
   return (
