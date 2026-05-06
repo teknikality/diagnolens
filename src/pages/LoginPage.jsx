@@ -40,25 +40,17 @@ export default function LoginPage() {
     setApiPhone(phone.trim());
 
     try {
-      const result = await apiPost('/api/auth/phone-login', { phone: phone.trim() });
-
-      // NOW set auth state (this will trigger re-render, but we navigate first)
-      loginWithPhone(phone.trim());
-
-      if (result.is_new_user) {
-        navigate('/family-setup', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
-      }
+      // Register with backend (creates account + self member if needed)
+      await apiPost('/api/auth/phone-login', { phone: phone.trim() });
     } catch (err) {
       console.warn('Backend login failed, proceeding offline:', err.message);
-      // Set auth state and go to family setup as fallback
-      loginWithPhone(phone.trim());
-      navigate('/family-setup', { replace: true });
-    } finally {
-      setLoading(false);
-      loggingIn.current = false;
     }
+
+    // Set auth state AFTER API call, then navigate.
+    // Keep loggingIn.current = true to prevent the isAuthenticated
+    // redirect from firing before navigate takes effect.
+    loginWithPhone(phone.trim());
+    navigate('/family-setup', { replace: true });
   };
 
   return (

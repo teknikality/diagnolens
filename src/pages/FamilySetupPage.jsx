@@ -123,7 +123,8 @@ export default function FamilySetupPage() {
     <div style={{
       minHeight: 'calc(var(--vh, 1vh) * 100)',
       background: DL_COLORS.bgBase, color: DL_COLORS.fgPrimary,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 20px',
+      display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+      padding: '48px 20px 24px', overflowY: 'auto',
     }}>
       <div style={{ width: '100%', maxWidth: 420 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32, gap: 10 }}>
