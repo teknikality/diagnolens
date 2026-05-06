@@ -29,18 +29,10 @@ export default {
 
   login: {
     phoneTitle: 'Sign in with your phone',
-    phoneSub: "We'll send a 6-digit code to verify your number.",
+    phoneSub: 'Enter your phone number to get started.',
     phoneLabel: 'Phone number',
-    sendOtp: 'Send OTP',
-    sending: 'Sending...',
-    otpTitle: 'Enter verification code',
-    otpSub: 'Code sent to your phone',
-    otpLabel: 'Verification code',
-    verifyOtp: 'Verify',
-    verifying: 'Verifying...',
-    changePhone: 'Use a different number',
-    errorSend: 'Failed to send code. Check your number and try again.',
-    errorOtp: 'Invalid code. Try again.',
+    continue: 'Continue',
+    errorPhone: 'Enter a valid phone number',
   },
 
   nav: {
