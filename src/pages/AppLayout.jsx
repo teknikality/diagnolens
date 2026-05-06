@@ -5,6 +5,7 @@ import AppShell from '../components/AppShell.jsx';
 
 const PATH_TO_VIEW = {
   '/dashboard': 'dashboard',
+  '/family':    'family',
   '/reports':   'reports',
   '/trends':    'trends',
   '/ask':       'ask',

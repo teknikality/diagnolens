@@ -4,6 +4,7 @@ import Icon from '../Icon.jsx';
 import { API_BASE } from '../../config.js';
 import { normaliseBiomarker } from '../../utils.js';
 import { useLang } from '../../i18n/LangContext.jsx';
+import { getApiPhone } from '../../lib/api.js';
 
 function classifyError(err, status) {
   if (err?.name === 'AbortError') return 'timeout';
@@ -23,7 +24,7 @@ const ERROR_META = {
 
 const STEP_ICONS = ['scan-text', 'flask-conical', 'sparkles'];
 
-export default function ProcessingScreen({ file, answers, onComplete, onRetry }) {
+export default function ProcessingScreen({ file, answers, memberId, onComplete, onRetry }) {
   const { t, lang } = useLang();
 
   const [activeStep, setActiveStep]    = useState(0);
@@ -69,10 +70,16 @@ export default function ProcessingScreen({ file, answers, onComplete, onRetry })
       if (answers.activity)           body.append('activity',       answers.activity);
       if (answers.work)               body.append('work',           answers.work);
       body.append('language', lang);
+      if (memberId) body.append('member_id', memberId);
+      const phone = getApiPhone();
+      if (phone) body.append('phone', phone);
+
+      const headers = {};
+      if (phone) headers['X-Phone'] = phone;
 
       let status = null;
       try {
-        const res = await fetch(`${API_BASE}/analyze-report`, { method: 'POST', body, signal: controller.signal });
+        const res = await fetch(`${API_BASE}/analyze-report`, { method: 'POST', body, headers, signal: controller.signal });
         clearTimeout(timeoutId);
         if (cancelled) return;
 

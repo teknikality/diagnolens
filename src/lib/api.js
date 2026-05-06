@@ -1,23 +1,24 @@
 /**
- * Authenticated fetch wrapper for HeartFit API.
+ * API wrapper for HeartFit backend.
  *
- * Reads the Supabase session token and attaches it as
- * an Authorization: Bearer header on every request.
+ * Pilot mode: sends X-Phone header for authentication.
+ * Production: will switch to Authorization: Bearer with Supabase JWT.
  */
-import { supabase } from './supabase.js';
 import { API_BASE } from '../config.js';
 
-async function getToken() {
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getSession();
-  return data?.session?.access_token ?? null;
+// Phone is set by AuthContext after login
+let _phone = null;
+export function setApiPhone(phone) { _phone = phone; }
+export function getApiPhone() { return _phone; }
+
+function authHeaders() {
+  const headers = {};
+  if (_phone) headers['X-Phone'] = _phone;
+  return headers;
 }
 
 export async function apiFetch(path, options = {}) {
-  const token = await getToken();
-  const headers = { ...(options.headers || {}) };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-
+  const headers = { ...authHeaders(), ...(options.headers || {}) };
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, { ...options, headers });
   if (!res.ok) {
@@ -52,10 +53,7 @@ export function apiDelete(path) {
 }
 
 export async function apiPostForm(path, formData) {
-  const token = await getToken();
-  const headers = {};
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-
+  const headers = authHeaders();
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, { method: 'POST', headers, body: formData });
   if (!res.ok) {

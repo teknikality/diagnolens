@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { apiPost } from '../lib/api.js';
 import { DL_COLORS } from '../tokens.js';
 import DLLogo from '../components/DLLogo.jsx';
 import Icon from '../components/Icon.jsx';
@@ -15,19 +16,38 @@ export default function LoginPage() {
 
   const [phone, setPhone] = useState('+91');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   if (isAuthenticated) return <Navigate to={from} replace />;
 
   const isValid = phone.replace(/\D/g, '').length >= 10;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isValid) {
       setError(t('login.errorPhone') || 'Enter a valid phone number');
       return;
     }
+    setLoading(true);
+    setError('');
+
+    // Set phone in auth context first (so API calls include X-Phone header)
     loginWithPhone(phone.trim());
-    navigate('/family-setup', { replace: true });
+
+    try {
+      const result = await apiPost('/api/auth/phone-login', { phone: phone.trim() });
+      if (result.is_new_user) {
+        navigate('/family-setup', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    } catch (err) {
+      // Backend might be unreachable — still let user in (pilot mode)
+      console.warn('Backend login failed, proceeding offline:', err.message);
+      navigate('/family-setup', { replace: true });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -100,20 +120,21 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={!isValid}
+              disabled={!isValid || loading}
               style={{
                 width: '100%',
-                background: isValid ? DL_COLORS.accent : DL_COLORS.bgRaised,
-                color: isValid ? '#0a1a16' : DL_COLORS.fgMuted,
+                background: isValid && !loading ? DL_COLORS.accent : DL_COLORS.bgRaised,
+                color: isValid && !loading ? '#0a1a16' : DL_COLORS.fgMuted,
                 border: 'none', borderRadius: 10, padding: '13px',
                 fontSize: 15, fontWeight: 600,
-                cursor: isValid ? 'pointer' : 'not-allowed',
+                cursor: isValid && !loading ? 'pointer' : 'not-allowed',
                 transition: 'all 200ms',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
-              <Icon name="arrow-right" size={16} />
-              {t('login.continue') || 'Continue'}
+              {loading
+                ? <><Icon name="loader" size={16} />{'Loading...'}</>
+                : <><Icon name="arrow-right" size={16} />{t('login.continue') || 'Continue'}</>}
             </button>
           </form>
         </div>

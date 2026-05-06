@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { setApiPhone } from '../lib/api.js';
 
 const STORAGE_KEY = 'dl_auth';
 
@@ -9,7 +10,12 @@ function readStorage() {
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [state, setState] = useState(() => readStorage() || { phone: null });
+  const [state, setState] = useState(() => {
+    const saved = readStorage() || { phone: null };
+    // Restore API phone on reload
+    if (saved.phone) setApiPhone(saved.phone);
+    return saved;
+  });
 
   const isAuthenticated = !!state.phone;
   const loading = false;
@@ -17,17 +23,16 @@ export function AuthProvider({ children }) {
   const loginWithPhone = (phone) => {
     const next = { phone };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    setApiPhone(phone);
     setState(next);
   };
 
   const logout = () => {
     localStorage.removeItem(STORAGE_KEY);
+    setApiPhone(null);
     setState({ phone: null });
   };
 
-  // Stubs for OTP — not used in pilot, keeps LoginPage compatible
-  const sendOTP = async () => {};
-  const verifyOTP = async () => {};
   const getToken = () => null;
 
   return (
@@ -35,11 +40,8 @@ export function AuthProvider({ children }) {
       isAuthenticated,
       user: state.phone ? { phone: state.phone } : null,
       phone: state.phone,
-      session: null,
       loading,
       loginWithPhone,
-      sendOTP,
-      verifyOTP,
       logout,
       getToken,
     }}>
