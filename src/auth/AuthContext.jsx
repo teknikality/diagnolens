@@ -1,36 +1,28 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { setApiPhone } from '../lib/api.js';
-
-const STORAGE_KEY = 'dl_auth';
-
-function readStorage() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch { return null; }
-}
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [state, setState] = useState(() => {
-    const saved = readStorage() || { phone: null };
-    // Restore API phone on reload
-    if (saved.phone) setApiPhone(saved.phone);
-    return saved;
-  });
+  // Pilot mode: auth lives in React state only.
+  // Reload = fresh login screen. Each session is one user.
+  const [phone, setPhone] = useState(null);
 
-  const isAuthenticated = !!state.phone;
+  const isAuthenticated = !!phone;
   const loading = false;
 
-  const loginWithPhone = (phone) => {
-    const next = { phone };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    setApiPhone(phone);
-    setState(next);
+  const loginWithPhone = (p) => {
+    setPhone(p);
+    setApiPhone(p);
   };
 
   const logout = () => {
-    localStorage.removeItem(STORAGE_KEY);
+    setPhone(null);
     setApiPhone(null);
-    setState({ phone: null });
+    // Clear all session data so next user starts clean
+    sessionStorage.clear();
+    localStorage.removeItem('dl_active_member');
+    localStorage.removeItem('dl_family_members');
   };
 
   const getToken = () => null;
@@ -38,8 +30,8 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       isAuthenticated,
-      user: state.phone ? { phone: state.phone } : null,
-      phone: state.phone,
+      user: phone ? { phone } : null,
+      phone,
       loading,
       loginWithPhone,
       logout,

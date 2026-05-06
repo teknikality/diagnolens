@@ -7,7 +7,7 @@ import { useLang } from '../../i18n/LangContext.jsx';
 import { useFamily } from '../../family/FamilyContext.jsx';
 
 const STEP_META = [
-  { type: 'slider', min: 18, max: 90, default: 35, unit: 'years', optional: false },
+  { type: 'slider', min: 0, max: 100, default: 35, unit: 'years', optional: false },
   { type: 'chips',   optional: true },
   { type: 'chips',   optional: true },
   { type: 'options', optional: true },
