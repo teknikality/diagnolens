@@ -196,14 +196,6 @@ export default function AppShell({ currentView, onNavigate, onLogout, children }
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: DL_COLORS.bgRaised, borderRadius: 8,
-              padding: '6px 12px', border: `1px solid ${DL_COLORS.border}`, cursor: 'text',
-            }}>
-              <Icon name="search" size={13} style={{ color: DL_COLORS.fgMuted }} />
-              <span style={{ fontSize: 12, color: DL_COLORS.fgMuted }}>{t('nav.searchPlaceholder')}</span>
-            </div>
-            <div style={{
               display: 'flex', alignItems: 'center', padding: '5px 10px',
               background: DL_COLORS.bgRaised, border: `1px solid ${DL_COLORS.border}`,
               borderRadius: 8, cursor: 'pointer',
